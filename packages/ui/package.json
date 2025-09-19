@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "dependencies": {
+    "@floating-ui/react": "^0.27.13",
+    "@radix-ui/react-hover-card": "^1.1.14",
+    "@tanstack/react-form": "^1.6.3",
+    "embla-carousel-react": "8.0.0-rc15",
+    "filesize": "^10.1.6",
+    "input-otp": "^1.2.4",
+    "next-themes": "^0.2.1",
+    "react-hook-form": "^7.62.0",
+    "react-resizable-panels": "^2.0.23",
+    "recharts": "^3.1.0",
+    "uuidv7": "^1.0.2"
+  },
+  "devDependencies": {
+    "@ahmedayob/duck-shortcut": "^0.0.2",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "clsx": "^2.1.1",
+    "lucide-react": "catalog:",
+    "react": "catalog:react19",
+    "react-day-picker": "catalog:",
+    "react-dom": "catalog:react19",
+    "sonner": "^2.0.6",
+    "typescript": "catalog:",
+    "vaul": "0.9.0",
+    "zod": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "exports": {
+    "./*": "./src/*/index.ts"
+  },
+  "name": "@acme/ui",
+  "packageManager": "pnpm@10.10.0",
+  "private": true,
+  "scripts": {
+    "build": "tsdown",
+    "ci": "pnpm run lint && pnpm run format && pnpm run build",
+    "clean": "git clean -xdf .cache .turbo node_modules dist",
+    "format": "biome format --write ./",
+    "lint": "biome lint --write ./",
+    "publish": "pnpm run ci && changeset publish",
+    "release": "changeset version"
+  },
+  "type": "module",
+  "version": "0.1.0"
+}

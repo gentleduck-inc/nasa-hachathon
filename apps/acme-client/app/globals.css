@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@source "../node_modules/@acme/ui";
+@plugin "tailwindcss-animate";
+@import "@acme/tailwind-config/web.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: "Adjusted Lucida Sans Typewriter Fallback";
+  src: local("Lucida Sans Typewriter");
+  size-adjust: 119%;
+  ascent-override: 86%;
+  descent-override: 16%;
+  line-gap-override: 30%;
+}
+
+@font-face {
+  font-family: "Adjusted Arial Fallback";
+  src: local("Arial");
+  size-adjust: 99%;
+  ascent-override: 101%;
+  descent-override: 26%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Geist";
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(/fonts/Geist-VF.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Mono";
+  font-weight: 500;
+  font-display: fallback;
+  src: url(/fonts/JetBrainsMono-MD.woff2) format("woff2");
+}
+
+:root {
+  --font-sans: "Geist", "Adjusted Arial Fallback";
+  --font-mono: "JetBrains Mono", monospace, "Adjusted Lucida Sans Typewriter Fallback";
+}

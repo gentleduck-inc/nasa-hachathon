@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/waitlist/waitlist.constants.ts"],"sourcesContent":["export const WaitlistError = [\n  // Waitlist\n  'WAITLIST_ALREADY_EXISTS',\n  'WAITLIST_NOT_FOUND',\n  'WAITLIST_ERROR',\n\n  'WAITLIST_FAILED_TO_ADD',\n] as const\n"],"names":["WaitlistError"],"mappings":";;;;+BAAaA;;;eAAAA;;;AAAN,MAAMA,gBAAgB;IAC3B,WAAW;IACX;IACA;IACA;IAEA;CACD"}
