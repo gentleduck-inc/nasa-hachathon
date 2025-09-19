@@ -1,109 +1,35 @@
-'use client'
+import * as React from 'react'
+import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
+import { Circle } from 'lucide-react'
 
-import { cn } from '@gentleduck/libs/cn'
-import { AnimVariants, checkersStylePattern } from '@gentleduck/motion/anim'
-import { useSvgIndicator } from '@gentleduck/primitives/checkers'
-import type * as React from 'react'
-import { Label } from '../label'
-import { RadioGroupContext, useHandleRadioClick } from './radio-group.hooks'
+import { cn } from '@acme/libs/cn'
 
-function Radio({
-  className,
-  indicator,
-  checkedIndicator,
-  ref,
-  style,
-  ...props
-}: React.HTMLProps<HTMLInputElement> & { indicator?: React.ReactElement; checkedIndicator?: React.ReactElement }) {
-  const { indicatorReady, checkedIndicatorReady, inputStyle, SvgIndicator } = useSvgIndicator({
-    checkedIndicator,
-    indicator,
-  })
+const RadioGroup = React.forwardRef<
+  React.ElementRef<typeof RadioGroupPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
+>(({ className, ...props }, ref) => {
+  return <RadioGroupPrimitive.Root className={cn('grid gap-2', className)} {...props} ref={ref} />
+})
+RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
+const RadioGroupItem = React.forwardRef<
+  React.ElementRef<typeof RadioGroupPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
+>(({ className, ...props }, ref) => {
   return (
-    <>
-      <input
-        className={cn(
-          checkersStylePattern({
-            indicatorState:
-              indicatorReady && checkedIndicatorReady
-                ? 'both'
-                : indicatorReady
-                  ? 'indicatorReady'
-                  : checkedIndicatorReady
-                    ? 'checkedIndicatorReady'
-                    : 'default',
-            type: 'radio',
-          }),
-          AnimVariants({ pseudo: 'animate' }),
-          'rounded-full',
-          className,
-        )}
-        duck-radio=""
-        ref={ref}
-        style={{ ...style, ...inputStyle }}
-        type="radio"
-        {...props}
-      />
-      <SvgIndicator className="sr-only" />
-    </>
-  )
-}
-
-function RadioGroup({
-  className,
-  children,
-  value,
-  onValueChange,
-  defaultValue,
-  ...props
-}: React.HTMLProps<HTMLUListElement> & {
-  value?: string
-  onValueChange?: (value: string) => void
-  defaultValue?: string
-}) {
-  const { selectedItemRef, itemsRef, wrapperRef } = useHandleRadioClick(defaultValue, value, onValueChange)
-
-  return (
-    <RadioGroupContext.Provider
-      value={{
-        itemsRef,
-        onValueChange: () => {},
-        selectedItemRef,
-        value: '',
-        wrapperRef,
-      }}>
-      <ul className={cn('flex flex-col', className)} duck-radio-group="" ref={wrapperRef} {...props}>
-        {children}
-      </ul>
-    </RadioGroupContext.Provider>
-  )
-}
-
-function RadioGroupItem({
-  className,
-  children,
-  customIndicator,
-  value,
-  ...props
-}: Omit<React.HTMLProps<HTMLLIElement>, 'value'> & { customIndicator?: React.ReactNode; value: string }) {
-  return (
-    <li
+    <RadioGroupPrimitive.Item
+      ref={ref}
       className={cn(
-        'relative flex items-center gap-2 [&>#radio-indicator]:opacity-0 [&[aria-checked=true]>#radio-indicator]:opacity-100',
+        'aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
-      duck-radio-item=""
-      id={value}
-      role="presentation"
       {...props}>
-      {customIndicator && <span id="radio-indicator">{customIndicator}</span>}
-      <Radio className={cn(customIndicator?.toString() && 'hidden')} id={value} />
-      <Label className="font-normal text-base" duck-radio-label="" htmlFor={value}>
-        {children}
-      </Label>
-    </li>
+      <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
+        <Circle className="h-2.5 w-2.5 fill-current text-current" />
+      </RadioGroupPrimitive.Indicator>
+    </RadioGroupPrimitive.Item>
   )
-}
+})
+RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
 
-export { Radio, RadioGroup, RadioGroupItem }
+export { RadioGroup, RadioGroupItem }
