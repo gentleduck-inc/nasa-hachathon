@@ -1,357 +1,510 @@
-import { relations } from 'drizzle-orm'
-import { index, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
-import { uuidv7 } from 'uuidv7'
+import { sql } from 'drizzle-orm'
+import {
+  boolean,
+  decimal,
+  foreignKey,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  real,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core'
 
-// ================================= Tables =========================================
+// Enums
+export const userRoleEnum = pgEnum('user_role', ['admin', 'mission_commander', 'crew_member', 'engineer', 'scientist'])
+export const missionStatusEnum = pgEnum('mission_status', ['planning', 'active', 'completed', 'aborted'])
+export const wasteTypeEnum = pgEnum('waste_type', [
+  'plastics',
+  'metals',
+  'foam',
+  'textiles',
+  'composites',
+  'eva_waste',
+  'food_packaging',
+  'structural_elements',
+  'bubble_wrap',
+  'nitrile_gloves',
+  'other',
+])
+export const moduleStatusEnum = pgEnum('module_status', ['active', 'maintenance', 'broken', 'offline'])
+export const runStatusEnum = pgEnum('run_status', ['queued', 'running', 'completed', 'failed', 'cancelled'])
+export const productTypeEnum = pgEnum('product_type', [
+  'brick',
+  'tile',
+  'utensil',
+  'container',
+  'tool',
+  'structural_component',
+  'insulation',
+  'filter',
+  'decorative_item',
+  'spare_part',
+])
 
-export const userTable = pgTable(
-  'user_table',
+/**
+ * Organizations represent mission agencies or companies (NASA, SpaceX, etc.)
+ * Multi-tenant root entity
+ */
+export const organizations = pgTable(
+  'organizations',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    name: varchar('name', { length: 255 }).notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    description: text('description'),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar('name', { length: 200 }).notNull(),
+    settings: jsonb('settings').default(sql`'{}'::jsonb`),
+    slug: varchar('slug', { length: 100 }).notNull().unique(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    version: integer('version').default(1).notNull(),
+  },
+  (table) => [
+    index('active_orgs_idx').on(table.created_at).where(sql`deleted_at IS NULL`),
+    uniqueIndex('org_slug_idx').on(table.slug),
+  ],
+)
+
+/**
+ * Users - astronauts, engineers, mission control personnel
+ */
+export const users = pgTable(
+  'users',
+  {
+    avatar_url: text('avatar_url'),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
     email: varchar('email', { length: 255 }).notNull().unique(),
-    userName: varchar('user_name', { length: 255 }).notNull().unique(),
-    password: varchar('password', { length: 255 }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
+    first_name: varchar('first_name', { length: 100 }).notNull(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    is_active: boolean('is_active').default(true).notNull(),
+    last_login_at: timestamp('last_login_at', { withTimezone: true }),
+    last_name: varchar('last_name', { length: 100 }).notNull(),
+    organization_id: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'restrict' }),
+    password_hash: varchar('password_hash', { length: 255 }).notNull(),
+    settings: jsonb('settings').default(sql`'{}'::jsonb`),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    username: varchar('username', { length: 100 }).notNull().unique(),
+    version: integer('version').default(1).notNull(),
   },
-  (table) => ({
-    emailIdx: index('user_email_idx').on(table.email),
-    userNameIdx: index('user_user_name_idx').on(table.userName),
-  }),
+  (table) => [
+    index('active_users_idx').on(table.is_active, table.last_login_at).where(sql`deleted_at IS NULL`),
+    uniqueIndex('user_email_idx').on(table.email),
+    index('org_users_idx').on(table.organization_id, table.created_at),
+    uniqueIndex('user_username_idx').on(table.username),
+  ],
 )
 
-export const organizationTable = pgTable(
-  'organization_table',
+/**
+ * User roles - RBAC system
+ */
+export const userRoles = pgTable(
+  'user_roles',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    name: varchar('name', { length: 255 }).notNull(),
-    userId: uuid('user_id')
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    granted_by: uuid('granted_by').references(() => users.id, { onDelete: 'restrict' }),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    role: userRoleEnum('role').notNull(),
+    user_id: uuid('user_id')
       .notNull()
-      .references(() => userTable.id),
-    createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
+      .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => ({
-    userIdIdx: index('organization_user_id_idx').on(table.userId),
-  }),
+  (table) => [
+    index('role_users_idx').on(table.role, table.created_at),
+    uniqueIndex('user_role_unique_idx').on(table.user_id, table.role).where(sql`deleted_at IS NULL`),
+  ],
 )
 
-export const roleTable = pgTable(
-  'role_table',
+/**
+ * API keys and session tokens
+ */
+export const apiKeys = pgTable(
+  'api_keys',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    name: varchar('name', { length: 255 }).notNull(),
-    description: text('description').notNull(),
-    organizationId: uuid('organization_id')
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    expires_at: timestamp('expires_at', { withTimezone: true }),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    is_active: boolean('is_active').default(true).notNull(),
+    key_hash: varchar('key_hash', { length: 255 }).notNull().unique(),
+    last_used_at: timestamp('last_used_at', { withTimezone: true }),
+    name: varchar('name', { length: 100 }).notNull(),
+    permissions: jsonb('permissions').default(sql`'[]'::jsonb`),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    user_id: uuid('user_id')
       .notNull()
-      .references(() => organizationTable.id),
-    createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
+      .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => ({
-    orgIdx: index('role_organization_id_idx').on(table.organizationId),
-  }),
+  (table) => [
+    index('active_keys_idx').on(table.is_active, table.expires_at).where(sql`deleted_at IS NULL`),
+    uniqueIndex('api_key_hash_idx').on(table.key_hash),
+    index('user_keys_idx').on(table.user_id, table.created_at),
+  ],
 )
 
-export const organizationUsersTable = pgTable(
-  'organization_users_table',
+/**
+ * Mars missions - each mission has its own waste profile and timeline
+ */
+export const missions = pgTable(
+  'missions',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    userId: uuid('user_id')
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    crew_size: smallint('crew_size').notNull().default(8),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    description: text('description'),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    landing_date: timestamp('landing_date', { withTimezone: true }),
+    landing_site: varchar('landing_site', { length: 100 }).default('Jezero Crater'),
+    launch_date: timestamp('launch_date', { withTimezone: true }),
+    mission_duration_days: integer('mission_duration_days').notNull().default(1095),
+    name: varchar('name', { length: 200 }).notNull(),
+    organization_id: uuid('organization_id')
       .notNull()
-      .references(() => userTable.id),
-    roleId: uuid('role_id')
-      .notNull()
-      .references(() => roleTable.id),
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizationTable.id),
-    createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
+      .references(() => organizations.id, { onDelete: 'restrict' }),
+    return_date: timestamp('return_date', { withTimezone: true }),
+    settings: jsonb('settings').default(sql`'{}'::jsonb`),
+    status: missionStatusEnum('status').default('planning').notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    version: integer('version').default(1).notNull(),
   },
-  (table) => ({
-    userIdIdx: index('org_users_user_id_idx').on(table.userId),
-    orgIdIdx: index('org_users_org_id_idx').on(table.organizationId),
-    roleIdIdx: index('org_users_role_id_idx').on(table.roleId),
-  }),
+  (table) => [
+    index('active_missions_idx').on(table.status, table.landing_date).where(sql`deleted_at IS NULL`),
+    index('org_missions_idx').on(table.organization_id, table.created_at),
+    index('status_missions_idx').on(table.status, table.launch_date),
+  ],
 )
 
-export const permissionTable = pgTable('permission_table', {
-  id: uuid('id')
-    .primaryKey()
-    .$default(() => uuidv7()),
-  name: varchar('name', { length: 255 }).notNull(),
-  description: text('description').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-})
-
-export const rolePermissionTable = pgTable(
-  'role_permission_table',
+/**
+ * Mission crew assignments
+ */
+export const missionCrew = pgTable(
+  'mission_crew',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    roleId: uuid('role_id')
+    assigned_at: timestamp('assigned_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    mission_id: uuid('mission_id')
       .notNull()
-      .references(() => roleTable.id),
-    permissionId: uuid('permission_id')
+      .references(() => missions.id, { onDelete: 'cascade' }),
+    removed_at: timestamp('removed_at', { withTimezone: true }),
+    role: userRoleEnum('role').notNull(),
+    specialization: varchar('specialization', { length: 100 }),
+    user_id: uuid('user_id')
       .notNull()
-      .references(() => permissionTable.id),
-    createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
+      .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => ({
-    roleIdIdx: index('role_perm_role_id_idx').on(table.roleId),
-    permissionIdIdx: index('role_perm_permission_id_idx').on(table.permissionId),
-  }),
+  (table) => [
+    uniqueIndex('mission_crew_unique_idx').on(table.mission_id, table.user_id).where(sql`removed_at IS NULL`),
+    index('user_missions_idx').on(table.user_id, table.assigned_at),
+  ],
 )
 
-export const chatTable = pgTable(
-  'chat_table',
+/**
+ * Waste materials catalog - defines what waste types we can process
+ */
+export const wasteMaterials = pgTable(
+  'waste_materials',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    name: varchar('name', { length: 255 }).notNull().unique(),
-    organizationId: uuid('organization_id')
+    category: wasteTypeEnum('category').notNull(),
+    composition: jsonb('composition').default(sql`'{}'::jsonb`),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    density_kg_per_m3: decimal('density_kg_per_m3', { precision: 8, scale: 2 }),
+    description: text('description'),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar('name', { length: 100 }).notNull(),
+    organization_id: uuid('organization_id')
       .notNull()
-      .references(() => organizationTable.id),
-    createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
+      .references(() => organizations.id, { onDelete: 'restrict' }),
+    processing_difficulty: smallint('processing_difficulty').default(1),
+    properties: jsonb('properties').default(sql`'{}'::jsonb`),
+    recyclability_score: real('recyclability_score').default(0),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    version: integer('version').default(1).notNull(),
   },
-  (table) => ({
-    orgIdx: index('chat_organization_id_idx').on(table.organizationId),
-  }),
+  (table) => [
+    index('materials_category_idx').on(table.category, table.recyclability_score),
+    index('materials_name_idx').on(table.name),
+    index('org_materials_idx').on(table.organization_id, table.category),
+  ],
 )
 
-export const llmModelsTable = pgTable('llm_models_table', {
-  id: uuid('id')
-    .primaryKey()
-    .$default(() => uuidv7()),
-  provider: varchar('provider', { length: 255 }).notNull(),
-  name: varchar('name', { length: 255 }).notNull(),
-  contextLimit: integer('context_limit').notNull(),
-  tokenPrice: integer('token_price').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-})
-
-export const messageTypeEnum = pgEnum('message_type', ['user', 'assistant', 'system'])
-
-export const messageTable = pgTable(
-  'message_table',
+/**
+ * Processing modules - equipment that transforms waste into products
+ */
+export const processingModules = pgTable(
+  'processing_modules',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    type: messageTypeEnum('type').default('user'),
+    capabilities: jsonb('capabilities').default(sql`'{}'::jsonb`),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    crew_time_minutes_per_kg: decimal('crew_time_minutes_per_kg', { precision: 6, scale: 2 }).default('0'),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    description: text('description'),
+    efficiency_rating: real('efficiency_rating').default(1.0),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    maintenance_hours_per_day: decimal('maintenance_hours_per_day', { precision: 4, scale: 2 }).default('0'),
+    module_type: varchar('module_type', { length: 50 }).notNull(),
+    name: varchar('name', { length: 100 }).notNull(),
+    organization_id: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'restrict' }),
+    power_consumption_kw: decimal('power_consumption_kw', { precision: 8, scale: 2 }).notNull(),
+    status: moduleStatusEnum('status').default('active').notNull(),
+    throughput_kg_per_hour: decimal('throughput_kg_per_hour', { precision: 8, scale: 2 }).notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    version: integer('version').default(1).notNull(),
+  },
+  (table) => [
+    index('org_modules_idx').on(table.organization_id, table.module_type),
+    index('status_modules_idx').on(table.status, table.throughput_kg_per_hour),
+    index('modules_type_idx').on(table.module_type, table.efficiency_rating),
+  ],
+)
+
+/**
+ * Processing recipes - how to convert specific waste materials into products
+ */
+export const processingRecipes = pgTable(
+  'processing_recipes',
+  {
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    crew_time_minutes: integer('crew_time_minutes').default(0),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    description: text('description'),
+    energy_required_kwh: decimal('energy_required_kwh', { precision: 8, scale: 3 }).notNull(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    inputs: jsonb('inputs').notNull(),
+    name: varchar('name', { length: 200 }).notNull(),
+    organization_id: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'restrict' }),
+    output_product_type: productTypeEnum('output_product_type').notNull(),
+    outputs: jsonb('outputs').notNull(),
+    process_steps: jsonb('process_steps').notNull(),
+    processing_time_minutes: integer('processing_time_minutes').notNull(),
+    quality_score: real('quality_score').default(1.0),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    version: integer('version').default(1).notNull(),
+    yield_percentage: real('yield_percentage').default(0.8),
+  },
+  (table) => [
+    index('recipes_efficiency_idx').on(table.yield_percentage, table.energy_required_kwh),
+    index('org_recipes_idx').on(table.organization_id, table.output_product_type),
+    index('recipes_product_type_idx').on(table.output_product_type, table.quality_score),
+  ],
+)
+
+/**
+ * Simulation runs - each optimization/simulation attempt
+ */
+export const simulationRuns = pgTable(
+  'simulation_runs',
+  {
+    completed_at: timestamp('completed_at', { withTimezone: true }),
+    config: jsonb('config').notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    created_by: uuid('created_by')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    description: text('description'),
+    error_message: text('error_message'),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    mission_id: uuid('mission_id')
+      .notNull()
+      .references(() => missions.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 200 }).notNull(),
+    progress_percent: smallint('progress_percent').default(0),
+    results: jsonb('results').default(sql`'{}'::jsonb`),
+    run_type: varchar('run_type', { length: 50 }).notNull(),
+    started_at: timestamp('started_at', { withTimezone: true }),
+    status: runStatusEnum('status').default('queued').notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    version: integer('version').default(1).notNull(),
+  },
+  (table) => [
+    index('active_runs_idx').on(table.status, table.progress_percent).where(sql`deleted_at IS NULL`),
+    index('mission_runs_idx').on(table.mission_id, table.created_at),
+    index('status_runs_idx').on(table.status, table.created_at),
+    index('user_runs_idx').on(table.created_by, table.created_at),
+  ],
+)
+
+/**
+ * Products created from recycled waste
+ */
+export const products = pgTable(
+  'products',
+  {
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    creation_date: timestamp('creation_date', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    description: text('description'),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    is_in_use: boolean('is_in_use').default(false),
+    mass_kg: decimal('mass_kg', { precision: 8, scale: 3 }).notNull(),
+    mission_id: uuid('mission_id')
+      .notNull()
+      .references(() => missions.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 200 }).notNull(),
+    product_type: productTypeEnum('product_type').notNull(),
+    properties: jsonb('properties').default(sql`'{}'::jsonb`),
+    quality_score: real('quality_score').default(1.0),
+    recipe_id: uuid('recipe_id').references(() => processingRecipes.id, { onDelete: 'set null' }),
+    simulation_run_id: uuid('simulation_run_id').references(() => simulationRuns.id, { onDelete: 'cascade' }),
+    source_materials: jsonb('source_materials').notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    version: integer('version').default(1).notNull(),
+    volume_m3: decimal('volume_m3', { precision: 8, scale: 4 }),
+  },
+  (table) => [
+    index('mission_products_idx').on(table.mission_id, table.product_type),
+    index('run_products_idx').on(table.simulation_run_id, table.creation_date),
+    index('type_products_idx').on(table.product_type, table.quality_score),
+  ],
+)
+
+/**
+ * Comments and notes on missions, runs, products, etc.
+ */
+export const comments = pgTable(
+  'comments',
+  {
+    attachments: jsonb('attachments').default(sql`'[]'::jsonb`),
+    author_id: uuid('author_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     content: text('content').notNull(),
-    metadata: jsonb('metadata').notNull(),
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizationTable.id),
-    chatId: uuid('chat_id')
-      .notNull()
-      .references(() => chatTable.id),
-    modelId: uuid('model_id')
-      .notNull()
-      .references(() => llmModelsTable.id),
-    createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    entity_id: uuid('entity_id').notNull(),
+    entity_type: varchar('entity_type', { length: 50 }).notNull(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    parent_comment_id: uuid('parent_comment_id'),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    version: integer('version').default(1).notNull(),
   },
-  (table) => ({
-    organizationIdIdx: index('message_org_id_idx').on(table.organizationId),
-    chatIdIdx: index('message_chat_id_idx').on(table.chatId),
-    modelIdIdx: index('message_model_id_idx').on(table.modelId),
-  }),
+  (table) => [
+    index('entity_comments_idx').on(table.entity_type, table.entity_id, table.created_at),
+    index('author_comments_idx').on(table.author_id, table.created_at),
+    index('parent_comments_idx').on(table.parent_comment_id, table.created_at),
+    foreignKey({
+      columns: [table.parent_comment_id],
+      foreignColumns: [table.id],
+      name: 'comments_parent_comment_fk',
+    }).onDelete('cascade'),
+  ],
 )
 
-export const feedbackTable = pgTable(
-  'feedback_table',
+/**
+ * File attachments for documentation, images, 3D models, etc.
+ */
+export const attachments = pgTable(
+  'attachments',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => userTable.id),
-    messageId: uuid('message_id')
-      .notNull()
-      .references(() => messageTable.id),
-    createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
+    checksum_sha256: varchar('checksum_sha256', { length: 64 }),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    filename: varchar('filename', { length: 255 }).notNull(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    is_public: boolean('is_public').default(false),
+    metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+    mime_type: varchar('mime_type', { length: 100 }).notNull(),
+    original_filename: varchar('original_filename', { length: 255 }).notNull(),
+    size_bytes: integer('size_bytes').notNull(),
+    storage_path: text('storage_path').notNull(),
+    storage_provider: varchar('storage_provider', { length: 50 }).default('local'),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    uploaded_by: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
   },
-  (table) => ({
-    userIdIdx: index('feedback_user_id_idx').on(table.userId),
-    messageIdIdx: index('feedback_message_id_idx').on(table.messageId),
-  }),
+  (table) => [
+    uniqueIndex('attachments_checksum_idx').on(table.checksum_sha256).where(sql`checksum_sha256 IS NOT NULL`),
+    index('attachments_type_idx').on(table.mime_type, table.size_bytes),
+    index('uploader_attachments_idx').on(table.uploaded_by, table.created_at),
+  ],
 )
 
-export const wishlistTable = pgTable('wishlist_table', {
-  id: uuid('id')
-    .primaryKey()
-    .$default(() => uuidv7()),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  createdAt: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-})
-
-export const otpTable = pgTable(
-  'otp_table',
+/**
+ * Audit log - tracks all significant actions in the system
+ */
+export const auditLogs = pgTable(
+  'audit_logs',
   {
-    id: uuid('id')
-      .primaryKey()
-      .$default(() => uuidv7()),
-    user_id: varchar('user_id', { length: 255 }).notNull().unique(),
-    otp: varchar('otp', { length: 255 }).notNull(),
-    created_at: timestamp('created_at', { withTimezone: true, precision: 0 }).notNull().defaultNow(),
-    expires_at: timestamp('expires_at', { withTimezone: true, precision: 0 }).notNull(),
+    action: varchar('action', { length: 100 }).notNull(),
+    changes: jsonb('changes').default(sql`'{}'::jsonb`),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    entity_id: uuid('entity_id').notNull(),
+    entity_type: varchar('entity_type', { length: 50 }).notNull(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    ip_address: varchar('ip_address', { length: 45 }),
+    organization_id: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    user_agent: text('user_agent'),
+    user_id: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   },
-  (table) => ({
-    userIdIdx: index('otp_user_id_idx').on(table.user_id),
-    expiresAtIdx: index('otp_expires_at_idx').on(table.expires_at),
-  }),
+  (table) => [
+    index('entity_actions_idx').on(table.entity_type, table.entity_id, table.created_at),
+    index('org_actions_idx').on(table.organization_id, table.action, table.created_at),
+    index('audit_logs_time_partition_idx').on(table.created_at),
+    index('user_actions_idx').on(table.user_id, table.created_at),
+  ],
 )
 
-/* ###################################################################################### */
+/**
+ * Settings - system and user preferences stored as key-value pairs
+ */
+export const settings = pgTable(
+  'settings',
+  {
+    category: varchar('category', { length: 50 }).default('general'),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    description: text('description'),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    is_system: boolean('is_system').default(false),
+    key: varchar('key', { length: 100 }).notNull(),
+    organization_id: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    user_id: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    value: jsonb('value').notNull(),
+  },
+  (table) => [
+    index('settings_category_idx').on(table.category, table.is_system),
+    uniqueIndex('org_settings_unique_idx').on(table.organization_id, table.key).where(sql`organization_id IS NOT NULL`),
+    uniqueIndex('user_settings_unique_idx').on(table.user_id, table.key).where(sql`user_id IS NOT NULL`),
+  ],
+)
 
-// ================================= Relations =========================================
-
-export const userRelations = relations(userTable, ({ many }) => ({
-  organizations: many(organizationTable),
-  organizationUsers: many(organizationUsersTable),
-  feedbacks: many(feedbackTable),
-}))
-
-export const organizationRelations = relations(organizationTable, ({ one, many }) => ({
-  owner: one(userTable, {
-    fields: [organizationTable.userId],
-    references: [userTable.id],
-  }),
-  roles: many(roleTable),
-  chats: many(chatTable),
-  users: many(organizationUsersTable),
-}))
-
-export const roleRelations = relations(roleTable, ({ one, many }) => ({
-  organization: one(organizationTable, {
-    fields: [roleTable.organizationId],
-    references: [organizationTable.id],
-  }),
-  organizationUsers: many(organizationUsersTable),
-  permissions: many(rolePermissionTable),
-}))
-
-export const organizationUsersRelations = relations(organizationUsersTable, ({ one }) => ({
-  user: one(userTable, {
-    fields: [organizationUsersTable.userId],
-    references: [userTable.id],
-  }),
-  organization: one(organizationTable, {
-    fields: [organizationUsersTable.organizationId],
-    references: [organizationTable.id],
-  }),
-  role: one(roleTable, {
-    fields: [organizationUsersTable.roleId],
-    references: [roleTable.id],
-  }),
-}))
-
-export const permissionRelations = relations(permissionTable, ({ many }) => ({
-  roles: many(rolePermissionTable),
-}))
-
-export const rolePermissionRelations = relations(rolePermissionTable, ({ one }) => ({
-  role: one(roleTable, {
-    fields: [rolePermissionTable.roleId],
-    references: [roleTable.id],
-  }),
-  permission: one(permissionTable, {
-    fields: [rolePermissionTable.permissionId],
-    references: [permissionTable.id],
-  }),
-}))
-
-export const chatRelations = relations(chatTable, ({ one, many }) => ({
-  organization: one(organizationTable, {
-    fields: [chatTable.organizationId],
-    references: [organizationTable.id],
-  }),
-  messages: many(messageTable),
-}))
-
-export const llmModelRelations = relations(llmModelsTable, ({ many }) => ({
-  messages: many(messageTable),
-}))
-
-export const messageRelations = relations(messageTable, ({ one }) => ({
-  organization: one(organizationTable, {
-    fields: [messageTable.organizationId],
-    references: [organizationTable.id],
-  }),
-  chat: one(chatTable, {
-    fields: [messageTable.chatId],
-    references: [chatTable.id],
-  }),
-  model: one(llmModelsTable, {
-    fields: [messageTable.modelId],
-    references: [llmModelsTable.id],
-  }),
-}))
-
-export const feedbackRelations = relations(feedbackTable, ({ one }) => ({
-  user: one(userTable, {
-    fields: [feedbackTable.userId],
-    references: [userTable.id],
-  }),
-  message: one(messageTable, {
-    fields: [feedbackTable.messageId],
-    references: [messageTable.id],
-  }),
-}))
-
-export const otpRelations = relations(otpTable, ({ one }) => ({
-  user: one(userTable, {
-    fields: [otpTable.user_id],
-    references: [userTable.userName],
-  }),
-}))
-
-export const _relations = {
-  userRelations,
-  organizationRelations,
-  roleRelations,
-  organizationUsersRelations,
-  permissionRelations,
-  rolePermissionRelations,
-  chatRelations,
-  llmModelRelations,
-  messageRelations,
-  feedbackRelations,
-  otpRelations,
-}
-
-export const tables = {
-  userTable,
-  organizationTable,
-  organizationUsersTable,
-  roleTable,
-  permissionTable,
-  rolePermissionTable,
-  chatTable,
-  llmModelsTable,
-  messageTable,
-  feedbackTable,
-  wishlistTable,
-  otpTable,
-}
+/**
+ * Full-text search index for searchable content
+ */
+export const searchIndex = pgTable(
+  'search_index',
+  {
+    content: text('content').notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    entity_id: uuid('entity_id').notNull(),
+    entity_type: varchar('entity_type', { length: 50 }).notNull(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    organization_id: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    search_vector: text('search_vector'),
+    tags: jsonb('tags').default(sql`'[]'::jsonb`),
+    title: text('title').notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (table) => [
+    uniqueIndex('entity_search_unique_idx').on(table.entity_type, table.entity_id),
+    index('org_search_idx').on(table.organization_id, table.entity_type),
+    index('search_tags_idx').on(table.tags),
+  ],
+)

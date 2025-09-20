@@ -1,28 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@acme/db",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./tables": "./src/tables.ts",
-    "./relations": "./src/relations.ts",
-    "./types": "./src/types.ts"
-  },
-  "scripts": {
-    "build": "tsdown ./src",
-    "db:pull": "drizzle-kit pull",
-    "db:migrate": "drizzle-kit migrate",
-    "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push",
-    "db:seed": "tsx ./src/seed.ts",
-    "db:studio": "npx drizzle-kit studio --host 0.0.0.0 --port 4983",
-    "db:start": "pnpm run db:generate && pnpm run db:push && pnpm run db:studio"
-  },
   "dependencies": {
-    "dotenv": "^16.6.1",
-    "drizzle-orm": "^0.44.2",
+    "dotenv": "^17.2.2",
+    "drizzle-orm": "^0.44.5",
     "pg": "^8.16.3",
     "postgres": "^3.4.7",
     "tsdown": "catalog:",
@@ -30,9 +10,30 @@
   },
   "devDependencies": {
     "@acme/typescript-config": "workspace:*",
-    "@types/node": "^22.16.3",
-    "drizzle-kit": "^0.30.6",
-    "tsx": "^4.20.3",
+    "@types/node": "^24.5.2",
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.5",
     "typescript": "catalog:"
-  }
+  },
+  "exports": {
+    ".": "./src/db.ts",
+    "./relations": "./src/relations.ts",
+    "./tables": "./src/tables.ts",
+    "./types": "./src/types.ts"
+  },
+  "name": "@acme/db",
+  "private": true,
+  "scripts": {
+    "build": "tsdown ./src",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:pull": "drizzle-kit pull",
+    "db:push": "drizzle-kit push",
+    "db:seed": "tsx ./src/seed.ts",
+    "db:start": "pnpm run db:generate && pnpm run db:push && pnpm run db:studio",
+    "db:studio": "npx drizzle-kit studio --host 0.0.0.0 --port 4983"
+  },
+  "type": "module",
+  "version": "0.1.0"
 }
