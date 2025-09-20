@@ -1,11 +1,10 @@
-// 'use client'
+'use client'
 import { SidebarInset, SidebarProvider } from '@acme/ui/sidebar'
-import React from 'react'
+import { redirect } from 'next/navigation'
+import type React from 'react'
 import { useAuth } from '~/components/auth/auth.hooks'
-
 import { AppSidebar } from '~/components/sidebar/sidebar'
 import { SiteHeader } from '~/components/sidebar/site-header'
-import { redirect } from 'next/navigation'
 
 export default function Page() {
   // const [myCookie, setMyCookie] = React.useState<string>('')
@@ -27,8 +26,8 @@ export default function Page() {
     <SidebarProvider
       style={
         {
-          '--sidebar-width': 'calc(var(--spacing) * 74)',
           '--header-height': 'calc(var(--spacing) * 12)',
+          '--sidebar-width': 'calc(var(--spacing) * 74)',
         } as React.CSSProperties
       }>
       <AppSidebar variant="inset" />

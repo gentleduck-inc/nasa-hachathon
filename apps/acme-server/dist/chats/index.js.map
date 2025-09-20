@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../src/chats/index.ts"],"sourcesContent":["export * from './chats.gateway'\nexport * from './chats.module'\n"],"names":[],"mappings":";;;;qBAAc;qBACA"}

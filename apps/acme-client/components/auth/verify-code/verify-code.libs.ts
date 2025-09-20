@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { libResponse } from '~/libs/libResponse'
-import { VerifyCodeSchemaType } from '~/server/auth/auth.dto'
+import type { VerifyCodeSchemaType } from '~/server/auth/auth.dto'
 
 export async function handleVerifyCode(_data: VerifyCodeSchemaType) {
   try {

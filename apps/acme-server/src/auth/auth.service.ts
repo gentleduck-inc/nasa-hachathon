@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { DrizzleError, eq } from 'drizzle-orm'
-import { NodePgDatabase } from 'drizzle-orm/node-postgres'
+import { type DrizzleError, eq } from 'drizzle-orm'
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import otpGenerator from 'otp-generator'
 import { PasswordHasher, throwError } from '~/common/libs'
 import { DrizzleAsyncProvider, schema } from '~/drizzle'
-import { UpdateAccountInformationSchemaType } from './auth.dto'
-import {
+import type { UpdateAccountInformationSchemaType } from './auth.dto'
+import type {
   AuthMessageType,
   DeleteUserDto,
   ForgotPasswordDto,
@@ -27,8 +27,8 @@ export class AuthService {
 
   async signin(data: SigninDto) {
     try {
-      const _user = await this.db.query.userTable.findFirst({
-        where: eq(schema.userTable.userName, data.username),
+      const _user = await this.db.query.users.findFirst({
+        where: eq(schema.users.username, data.username),
       })
 
       if (!_user) {
@@ -59,10 +59,10 @@ export class AuthService {
       const insertedUsers = await this.db
         .insert(schema.userTable)
         .values({
-          name: data.name,
-          userName: data.username,
           email: data.email,
+          name: data.name,
           password,
+          userName: data.username,
         })
         .returning()
 
@@ -92,10 +92,10 @@ export class AuthService {
     try {
       const user = await this.db.query.userTable.findFirst({
         columns: {
-          id: true,
-          userName: true,
-          name: true,
           email: true,
+          id: true,
+          name: true,
+          userName: true,
         },
         where: eq(schema.userTable.id, data.user_id),
       })
@@ -125,9 +125,9 @@ export class AuthService {
       }
 
       const OTP = otpGenerator.generate(6, {
-        upperCaseAlphabets: true,
-        specialChars: true,
         lowerCaseAlphabets: true,
+        specialChars: true,
+        upperCaseAlphabets: true,
       })
 
       const expires_at = new Date(Date.now() + 60000 * 10)
@@ -136,8 +136,8 @@ export class AuthService {
         .values({
           user_id: user?.id,
           ...data,
-          otp: OTP,
           expires_at,
+          otp: OTP,
         })
         .returning()
 

@@ -1,5 +1,5 @@
-import { ConfirmEmailProps } from './emails/confirm-email'
-import { WelcomeEmailProps } from './emails/welcome'
+import type { ConfirmEmailProps } from './emails/confirm-email'
+import type { WelcomeEmailProps } from './emails/welcome'
 
 export type EmailTemplate =
   | {

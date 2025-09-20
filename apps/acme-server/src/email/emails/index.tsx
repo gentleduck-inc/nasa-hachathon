@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { EmailTemplate } from '../email.types'
+import type { EmailTemplate } from '../email.types'
 
 export async function renderEmailTemplate(templateName: EmailTemplate['name'], props: EmailTemplate['args']) {
   const filePath = path.resolve(__dirname, `./${templateName}.tsx`)

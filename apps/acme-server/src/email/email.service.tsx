@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import type { ConfigService } from '@nestjs/config'
 import * as nodemailer from 'nodemailer'
-import { EmailTemplate } from './email.types'
+import type { EmailTemplate } from './email.types'
 import { renderEmailTemplate } from './emails'
 
 @Injectable()
@@ -9,11 +9,10 @@ export class EmailService {
   constructor(private readonly config: ConfigService) {}
 
   private transporter = nodemailer.createTransport({
-    host: this.config.get('MAIL_HOST'),
-    port: Number.parseInt(this.config.get('MAIL_PORT') as string, 10),
     from: this.config.get('MAIL_FROM_ADDRESS'),
-    to: this.config.get('MAIL_FROM_ADDRESS'),
+    host: this.config.get('MAIL_HOST'),
     name: this.config.get('MAIL_FROM_NAME'),
+    port: Number.parseInt(this.config.get('MAIL_PORT') as string, 10),
     // auth: {
     //   user: this.config.get('MAIL_USERNAME'),
     //   pass: this.config.get('MAIL_PASSWORD'),
@@ -22,6 +21,7 @@ export class EmailService {
     tls: {
       rejectUnauthorized: false,
     },
+    to: this.config.get('MAIL_FROM_ADDRESS'),
   })
 
   async sendTestEmail({
@@ -40,10 +40,10 @@ export class EmailService {
     const html = await renderEmailTemplate(template.name, template.args)
     await this.transporter.sendMail({
       from,
-      to,
+      html: html,
       subject,
       text,
-      html: html,
+      to,
     })
   }
 }

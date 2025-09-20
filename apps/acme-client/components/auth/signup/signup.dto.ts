@@ -1,4 +1,4 @@
-import z from 'zod'
+import type z from 'zod'
 import { signupSchema } from '~/server/auth/auth.dto'
 
 export const signupSchemaClient = signupSchema

@@ -1,14 +1,14 @@
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@acme/ui/form'
 import { Input } from '@acme/ui/input'
-import { UseMutationResult } from '@tanstack/react-query'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@acme/ui/react-hook-form'
+import type { UseMutationResult } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
-import { UseFormReturn } from 'react-hook-form'
-import { SigninSchemaType } from '~/server/auth/auth.types'
-import { User } from '~/server/auth/schema/user.schema'
-import { ResponseType } from '~/server/common/types'
-import { SignupSchemaType } from './signup'
+import type { UseFormReturn } from 'react-hook-form'
+import type { SigninSchemaType } from '~/server/auth/auth.dto'
+import type { User } from '~/server/auth/schema/user.schema'
+import type { ResponseType } from '~/server/common/types'
+import type { SignupSchemaType } from './signup'
 
 export function PasswordInput({
   form,
@@ -31,15 +31,15 @@ export function PasswordInput({
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   {...field}
+                  className="pr-10"
                   disabled={mutation.isPending}
                   placeholder="••••••••••••"
-                  className="pr-10"
                 />
                 <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
                   className="-translate-y-1/2 absolute top-1/2 right-2 text-muted-foreground hover:text-foreground"
-                  tabIndex={-1}>
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  tabIndex={-1}
+                  type="button">
                   {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
                 </button>
               </div>

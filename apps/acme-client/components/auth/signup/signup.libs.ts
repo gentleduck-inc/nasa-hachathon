@@ -1,8 +1,8 @@
-import { User } from '@acme/db/types'
+import type { User } from '@acme/db/types'
 import axios from 'axios'
 import { libResponse } from '~/libs/libResponse'
-import { ResponseType } from '~/server/common/types'
-import { SignupSchemaType } from './signup.dto'
+import type { ResponseType } from '~/server/common/types'
+import type { SignupSchemaType } from './signup.dto'
 
 export async function handleSignup(_data: SignupSchemaType): Promise<ResponseType<Omit<User, 'password'>>> {
   try {

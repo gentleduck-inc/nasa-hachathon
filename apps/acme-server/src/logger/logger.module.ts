@@ -6,8 +6,10 @@ import { LoggerInterceptor } from './logger.interceptor'
 import { LoggerService } from './logger.service'
 
 @Module({
+  exports: [LoggerService, LoggerInterceptor],
   imports: [
     WinstonModule.forRoot({
+      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
       transports: [
         // new winston.transports.Console({
         //   format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
@@ -17,7 +19,6 @@ import { LoggerService } from './logger.service'
           format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
         }),
       ],
-      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
     }),
   ],
   providers: [
@@ -29,6 +30,5 @@ import { LoggerService } from './logger.service'
       useClass: LoggerInterceptor,
     },
   ],
-  exports: [LoggerService, LoggerInterceptor],
 })
 export class LoggerModule {}

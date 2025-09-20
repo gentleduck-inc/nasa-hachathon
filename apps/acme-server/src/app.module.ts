@@ -8,6 +8,7 @@ import { MinioModule } from './minio'
 import { RedisModule } from './redis'
 
 @Module({
+  controllers: [],
   imports: [
     LoggerModule,
     DrizzleModule,
@@ -20,7 +21,6 @@ import { RedisModule } from './redis'
       isGlobal: true,
     }),
   ],
-  controllers: [],
   providers: [],
 })
 export class AppModule {}

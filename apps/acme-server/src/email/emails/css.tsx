@@ -28,8 +28,8 @@ export const text = {
 
 export const verifyText = {
   ...text,
-  margin: 0,
   fontWeight: 'bold',
+  margin: 0,
   textAlign: 'center' as const,
 }
 
@@ -41,8 +41,8 @@ export const validityText = {
 
 export const codeText = {
   ...text,
-  fontWeight: 'bold',
   fontSize: '36px',
+  fontWeight: 'bold',
   margin: '10px 0',
   textAlign: 'center' as const,
 }
@@ -68,13 +68,13 @@ export const button = {
   backgroundColor: '#054EDC',
   borderRadius: '4px',
   color: '#fafafa',
-  fontSize: '16px',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
   display: 'block',
-  padding: '12px',
-  width: 150,
+  fontSize: '16px',
   margin: '0 auto',
+  padding: '12px',
+  textAlign: 'center' as const,
+  textDecoration: 'none',
+  width: 150,
 }
 
 export const hr = {

@@ -133,8 +133,8 @@
   }
 
   .show-scroll-hover:hover {
-    scrollbar-width: thin;
     scrollbar-gutter: stable;
+    scrollbar-width: thin;
   }
 
   ::-webkit-scrollbar {

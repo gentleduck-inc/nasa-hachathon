@@ -7,10 +7,10 @@ export class LoggerService {
     const ip = this.getIp(req)
 
     return {
-      ip,
-      userAgent: req.headers['user-agent'] || '',
-      referer: req.headers['referer'] || '',
       headers: req.headers,
+      ip,
+      referer: req.headers['referer'] || '',
+      userAgent: req.headers['user-agent'] || '',
     }
   }
 

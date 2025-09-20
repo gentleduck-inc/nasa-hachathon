@@ -1,24 +1,24 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import { ReactQueryProvider } from '~/providers/react-query'
-import { Toaster } from 'sonner'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { Toaster } from 'sonner'
+import { ReactQueryProvider } from '~/providers/react-query'
 
 const geistSans = Geist({
-  variable: '--font-geist-sans',
   subsets: ['latin'],
+  variable: '--font-geist-sans',
 })
 
 const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
   subsets: ['latin'],
+  variable: '--font-geist-mono',
 })
 
 export const metadata: Metadata = {
-  title: 'acme',
   description: 'acme acme',
+  title: 'acme',
 }
 
 export default function RootLayout({
@@ -32,11 +32,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com" rel="preconnect" />
+        <link crossOrigin="anonymous" href="https://fonts.gstatic.com" rel="preconnect" />
         <link href="https://fonts.googleapis.com/css2?family=Fustat:wght@200..800&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} bg-slate-50 antialiased`}>
         <ReactQueryProvider>{children}</ReactQueryProvider>
         <Toaster />
       </body>

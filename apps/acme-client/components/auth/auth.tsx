@@ -6,14 +6,14 @@ export function AuthLayout({ children }: React.ComponentProps<'div'>) {
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
-          <Link href="/" className="flex items-center gap-2 font-medium">
+          <Link className="flex items-center gap-2 font-medium" href="/">
             <div className="flex size-6 items-center justify-center overflow-hidden rounded-md text-primary-foreground">
               <Image
-                src="/placeholder.webp"
                 alt="Image"
-                width={200}
-                height={200}
                 className="h-[52px] w-[100px] object-cover dark:brightness-[0.2] dark:grayscale"
+                height={200}
+                src="/placeholder.webp"
+                width={200}
               />
             </div>
             <code className="font-bold font-mono">@gentleduck</code>
@@ -25,10 +25,10 @@ export function AuthLayout({ children }: React.ComponentProps<'div'>) {
       </div>
       <div className="relative hidden border-border bg-muted lg:block ltr:border-l rtl:order-first rtl:border-r">
         <Image
-          src="/placeholder.webp"
           alt="Image"
-          fill
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          fill
+          src="/placeholder.webp"
         />
       </div>
     </div>

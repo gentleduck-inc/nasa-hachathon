@@ -1,5 +1,5 @@
 import { createZodDto } from 'nestjs-zod'
-import { AuthMessages } from './auth.constants'
+import type { AuthMessages } from './auth.constants'
 import {
   forgotPasswordSchema,
   resetPasswordSchema,

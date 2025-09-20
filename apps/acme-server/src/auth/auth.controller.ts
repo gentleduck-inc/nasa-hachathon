@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Post, Req, Res, Session, UseFilters, UseGuards } from '@nestjs/common'
-import { Request, Response } from 'express'
-import { SessionData } from 'express-session'
+import type { Request, Response } from 'express'
+import type { SessionData } from 'express-session'
 import { ErrorExceptionFilter } from '~/common/exceptions'
 import { ZodValidationPipe } from '~/common/pipes'
-import { ResponseType } from '~/common/types'
-import { EmailService, TemplateText } from '~/email'
-import { AuthMessages } from './auth.constants'
+import type { ResponseType } from '~/common/types'
+import { type EmailService, TemplateText } from '~/email'
+import type { AuthMessages } from './auth.constants'
 import {
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -15,8 +15,8 @@ import {
   withIDSchema,
 } from './auth.dto'
 import { AuthGuard } from './auth.guard'
-import { AuthService } from './auth.service'
-import {
+import type { AuthService } from './auth.service'
+import type {
   ForgotPasswordDto,
   GetUserDto,
   ResetPasswordDto,
@@ -46,15 +46,15 @@ export class AuthController {
       // session = { ...session, user: data! }
 
       return {
-        state: 'success',
         data,
         message: 'AUTH_SIGNIN_SUCCESS',
+        state: 'success',
       }
     } catch (error) {
       console.log(error)
       return {
-        state: 'error',
         message: 'AUTH_SIGNIN_FAILED',
+        state: 'error',
       }
     }
   }
@@ -67,19 +67,19 @@ export class AuthController {
 
     if (user) {
       this.emailService.sendTestEmail({
-        to: user.email,
         subject: TemplateText.welcome.subject,
-        text: TemplateText.welcome.text,
         template: {
-          name: 'welcome',
           args: {
             username: user.userName,
           },
+          name: 'welcome',
         },
+        text: TemplateText.welcome.text,
+        to: user.email,
       })
     }
 
-    return { state: 'success', data: user, message: 'AUTH_SIGNUP_SUCCESS' }
+    return { data: user, message: 'AUTH_SIGNUP_SUCCESS', state: 'success' }
   }
 
   @Get('signout')
@@ -92,10 +92,10 @@ export class AuthController {
       req.session.destroy((err) => {
         if (err) {
           console.error('Session destruction error:', err)
-          reject({ state: 'error', message: 'Could not destroy session' })
+          reject({ message: 'Could not destroy session', state: 'error' })
         } else {
           res.clearCookie('connect.sid')
-          resolve({ state: 'success', data: null, message: 'AUTH_SIGNOUT_SUCCESS' })
+          resolve({ data: null, message: 'AUTH_SIGNOUT_SUCCESS', state: 'success' })
         }
       })
     })
@@ -107,7 +107,7 @@ export class AuthController {
     @Body(new ZodValidationPipe(withIDSchema)) body: GetUserDto,
   ): Promise<ResponseType<Awaited<ReturnType<typeof this.authService.getAccountInformation>>, typeof AuthMessages>> {
     const user = await this.authService.getAccountInformation(body)
-    return { state: 'success', data: user, message: 'AUTH_GET_ACCOUNT_INFORMATION_SUCCESS' }
+    return { data: user, message: 'AUTH_GET_ACCOUNT_INFORMATION_SUCCESS', state: 'success' }
   }
 
   @Post('forgot-password')
@@ -118,19 +118,19 @@ export class AuthController {
 
     if (data!.otp) {
       this.emailService.sendTestEmail({
-        to: body.email,
         subject: TemplateText.forgot_password.subject,
-        text: TemplateText.forgot_password.text,
         template: {
-          name: 'forgot-password',
           args: {
             code: data!.otp[0].otp,
           },
+          name: 'forgot-password',
         },
+        text: TemplateText.forgot_password.text,
+        to: body.email,
       })
     }
 
-    return { state: 'success', data: data!.user as never, message: 'AUTH_FORGOT_PASSWORD_EMAIL_SENT' }
+    return { data: data!.user as never, message: 'AUTH_FORGOT_PASSWORD_EMAIL_SENT', state: 'success' }
   }
 
   @Post('reset-password')
@@ -138,7 +138,7 @@ export class AuthController {
     @Body(new ZodValidationPipe(resetPasswordSchema)) body: ResetPasswordDto,
   ): Promise<ResponseType<Awaited<ReturnType<typeof this.authService.resetPassword>>, typeof AuthMessages>> {
     const data = await this.authService.resetPassword(body)
-    return { state: 'success', data, message: 'AUTH_RESET_PASSWORD_SUCCESS' }
+    return { data, message: 'AUTH_RESET_PASSWORD_SUCCESS', state: 'success' }
   }
 
   @Post('update-profile')
@@ -146,13 +146,13 @@ export class AuthController {
     @Body(new ZodValidationPipe(updateAccountInformationSchema)) body: UpdateAccountInformationDto,
   ): Promise<ResponseType<Awaited<ReturnType<typeof this.authService.updateAccountInformation>>, typeof AuthMessages>> {
     const data = await this.authService.updateAccountInformation(body)
-    return { state: 'success', data, message: 'AUTH_UPDATE_ACCOUNT_INFORMATION_SUCCESS' }
+    return { data, message: 'AUTH_UPDATE_ACCOUNT_INFORMATION_SUCCESS', state: 'success' }
   }
 
   @Post('verify-code')
   async verifyEmail(@Body(new ZodValidationPipe(withIDSchema)) body: VerifyCodeDto) {
     const data = await this.authService.verifyCode(body)
-    return { state: 'success', data }
+    return { data, state: 'success' }
   }
 
   @Post('delete-account')
@@ -160,6 +160,6 @@ export class AuthController {
     @Body(new ZodValidationPipe(withIDSchema)) body: GetUserDto,
   ): Promise<ResponseType<Awaited<ReturnType<typeof this.authService.deleteAccount>>, typeof AuthMessages>> {
     const data = await this.authService.deleteAccount(body)
-    return { state: 'success', data, message: 'AUTH_DELETE_ACCOUNT_SUCCESS' }
+    return { data, message: 'AUTH_DELETE_ACCOUNT_SUCCESS', state: 'success' }
   }
 }

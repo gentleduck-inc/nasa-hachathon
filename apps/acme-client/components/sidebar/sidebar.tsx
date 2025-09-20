@@ -19,51 +19,34 @@ import {
 } from '@tabler/icons-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import * as React from 'react'
+import type * as React from 'react'
 import { NavDocuments } from './nav-documents'
 import { NavMain } from './nav-main'
 import { NavSecondary } from './nav-secondary'
 import { NavUser } from './nav-user'
 
 const data = {
-  user: {
-    name: 'Wildduck',
-    email: 'wildduck@iusevimbtw.com',
-    avatar: 'https://avatars.githubusercontent.com/u/108896341',
-  },
-  navMain: [
+  documents: [
     {
-      title: 'Dashboard',
+      icon: IconDatabase,
+      name: 'Data Library',
       url: '#',
-      icon: IconDashboard,
     },
     {
-      title: 'Lifecycle',
+      icon: IconReport,
+      name: 'Reports',
       url: '#',
-      icon: IconListDetails,
     },
     {
-      title: 'Analytics',
+      icon: IconFileWord,
+      name: 'Word Assistant',
       url: '#',
-      icon: IconChartBar,
-    },
-    {
-      title: 'Projects',
-      url: '#',
-      icon: IconFolder,
-    },
-    {
-      title: 'Team',
-      url: '#',
-      icon: IconUsers,
     },
   ],
   navClouds: [
     {
-      title: 'Capture',
       icon: IconCamera,
       isActive: true,
-      url: '#',
       items: [
         {
           title: 'Active Proposals',
@@ -74,11 +57,11 @@ const data = {
           url: '#',
         },
       ],
+      title: 'Capture',
+      url: '#',
     },
     {
-      title: 'Proposal',
       icon: IconFileDescription,
-      url: '#',
       items: [
         {
           title: 'Active Proposals',
@@ -89,11 +72,11 @@ const data = {
           url: '#',
         },
       ],
+      title: 'Proposal',
+      url: '#',
     },
     {
-      title: 'Prompts',
       icon: IconFileAi,
-      url: '#',
       items: [
         {
           title: 'Active Proposals',
@@ -104,42 +87,59 @@ const data = {
           url: '#',
         },
       ],
+      title: 'Prompts',
+      url: '#',
+    },
+  ],
+  navMain: [
+    {
+      icon: IconDashboard,
+      title: 'Dashboard',
+      url: '#',
+    },
+    {
+      icon: IconListDetails,
+      title: 'Lifecycle',
+      url: '#',
+    },
+    {
+      icon: IconChartBar,
+      title: 'Analytics',
+      url: '#',
+    },
+    {
+      icon: IconFolder,
+      title: 'Projects',
+      url: '#',
+    },
+    {
+      icon: IconUsers,
+      title: 'Team',
+      url: '#',
     },
   ],
   navSecondary: [
     {
+      icon: IconSettings,
       title: 'Settings',
       url: '#',
-      icon: IconSettings,
     },
     {
+      icon: IconHelp,
       title: 'Get Help',
       url: '#',
-      icon: IconHelp,
     },
     {
+      icon: IconSearch,
       title: 'Search',
       url: '#',
-      icon: IconSearch,
     },
   ],
-  documents: [
-    {
-      name: 'Data Library',
-      url: '#',
-      icon: IconDatabase,
-    },
-    {
-      name: 'Reports',
-      url: '#',
-      icon: IconReport,
-    },
-    {
-      name: 'Word Assistant',
-      url: '#',
-      icon: IconFileWord,
-    },
-  ],
+  user: {
+    avatar: 'https://avatars.githubusercontent.com/u/108896341',
+    email: 'wildduck@iusevimbtw.com',
+    name: 'Wildduck',
+  },
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -148,14 +148,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/" className="flex items-center gap-2 font-medium">
+            <Link className="flex items-center gap-2 font-medium" href="/">
               <div className="flex size-6 items-center justify-center overflow-hidden rounded-md text-primary-foreground">
                 <Image
-                  src="/placeholder.webp"
                   alt="Image"
-                  width={200}
-                  height={200}
                   className="h-[52px] w-[100px] object-cover dark:brightness-[0.2] dark:grayscale"
+                  height={200}
+                  src="/placeholder.webp"
+                  width={200}
                 />
               </div>
               <code className="font-bold font-mono">@gentleduck</code>
@@ -166,7 +166,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavSecondary className="mt-auto" items={data.navSecondary} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

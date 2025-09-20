@@ -1,7 +1,14 @@
-import { ArgumentsHost, Catch, ExceptionFilter, Inject, Injectable, WsExceptionFilter } from '@nestjs/common'
-import { Response } from 'express'
-import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
-import { Socket } from 'socket.io'
+import {
+  type ArgumentsHost,
+  Catch,
+  type ExceptionFilter,
+  Inject,
+  Injectable,
+  type WsExceptionFilter,
+} from '@nestjs/common'
+import type { Response } from 'express'
+import { WINSTON_MODULE_NEST_PROVIDER, type WinstonLogger } from 'nest-winston'
+import type { Socket } from 'socket.io'
 
 @Injectable()
 @Catch()
@@ -18,23 +25,23 @@ export class ErrorExceptionFilter implements ExceptionFilter {
     const status = 500
 
     const logPayload = {
-      type: 'HTTP_EXCEPTION',
-      message: exception.message,
-      stack: exception.stack,
-      url: request.url,
-      method: request.method,
+      headers: request.headers,
       ip:
         request.headers['x-forwarded-for'] ||
         (request as any).connection?.remoteAddress ||
         (request as any).socket.remoteAddress,
-      headers: request.headers,
+      message: exception.message,
+      method: request.method,
+      stack: exception.stack,
+      type: 'HTTP_EXCEPTION',
+      url: request.url,
     }
 
     this.logger.error(logPayload)
 
     response.status(status).json({
-      state: 'error',
       message: exception.message,
+      state: 'error',
     })
   }
 }
@@ -53,20 +60,20 @@ export class WSErrorExceptionFilter implements WsExceptionFilter {
     const ip = client.handshake?.address
 
     const logPayload = {
-      type: 'WS_EXCEPTION',
+      data: data,
+      event: data?.event || 'unknown',
+      headers: client.handshake?.headers,
+      ip,
       message: exception.message,
       stack: exception.stack,
-      event: data?.event || 'unknown',
-      data: data,
-      ip,
-      headers: client.handshake?.headers,
+      type: 'WS_EXCEPTION',
     }
 
     this.logger.error(logPayload)
 
     client.emit('error', {
-      status: 'error',
       message: exception.message,
+      status: 'error',
     })
   }
 }

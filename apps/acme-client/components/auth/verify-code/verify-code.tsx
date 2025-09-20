@@ -1,32 +1,32 @@
 'use client'
-import { cn } from '@acme/libs/cn'
 import { Button } from '@acme/ui/button'
-import { Form, FormField, FormItem } from '@acme/ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@acme/ui/input-otp'
+import { Form, FormField, FormItem } from '@acme/ui/react-hook-form'
+import { cn } from '@gentleduck/libs/cn'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
+import { useAtomValue } from 'jotai'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { VerifyCodeSchemaType, verifyCodeSchema } from '~/server/auth/auth.dto'
-import { handleVerifyCode } from './verify-code.libs'
-import { useAtomValue } from 'jotai'
+import { type VerifyCodeSchemaType, verifyCodeSchema } from '~/server/auth/auth.dto'
 import { userAtom } from '../auth.atom'
+import { handleVerifyCode } from './verify-code.libs'
 
 export function VerifyCodePage() {
   const router = useRouter()
   const user = useAtomValue(userAtom)
 
   const form = useForm<VerifyCodeSchemaType>({
-    resolver: zodResolver(verifyCodeSchema),
-    mode: 'onChange',
     defaultValues: {
-      user_id: String(user?.id),
       otp: '',
+      user_id: String(user?.id),
     },
+    mode: 'onChange',
+    resolver: zodResolver(verifyCodeSchema),
   })
 
   const verifyCodeMutation = useMutation({
@@ -51,7 +51,7 @@ export function VerifyCodePage() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto grid w-fit gap-4">
+        <form className="mx-auto grid w-fit gap-4" onSubmit={form.handleSubmit(onSubmit)}>
           <div className="grid w-full">
             <FormField
               control={form.control}
@@ -77,9 +77,9 @@ export function VerifyCodePage() {
           </div>
 
           <Button
-            type="submit"
             className="w-full cursor-pointer"
-            disabled={!form.formState.isValid || verifyCodeMutation.isPending}>
+            disabled={!form.formState.isValid || verifyCodeMutation.isPending}
+            type="submit">
             {verifyCodeMutation.isPending && <Loader2 className="size-4 animate-spin" />}
             Forget password
           </Button>
@@ -88,7 +88,7 @@ export function VerifyCodePage() {
 
       <div className="text-center text-sm">
         Don&apos;t have an account?{' '}
-        <Link href="/auth/signup" className="underline underline-offset-4">
+        <Link className="underline underline-offset-4" href="/auth/signup">
           Sign up
         </Link>
       </div>

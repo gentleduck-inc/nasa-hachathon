@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core'
-import { NestExpressApplication } from '@nestjs/platform-express'
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { RedisStore } from 'connect-redis'
 import session from 'express-session'
@@ -17,11 +17,11 @@ async function bootstrap() {
   app.setGlobalPrefix('v1')
 
   app.enableCors({
-    origin: ['http://localhost:3001', 'http://domain:3001'],
-    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization',
     credentials: true,
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     optionsSuccessStatus: 204,
+    origin: ['http://localhost:3001', 'http://domain:3001'],
   })
 
   const redisClient = createClient({
@@ -30,15 +30,15 @@ async function bootstrap() {
   await redisClient.connect()
 
   const _session = session({
-    store: new RedisStore({ client: redisClient, prefix: 'session:' }),
-    secret: process.env.SESSION_SECRET || 'keyboard cat',
-    resave: false,
-    saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // true in production with HTTPS
       maxAge: 1000 * 60 * 60 * 24, // 1 day
+      secure: false, // true in production with HTTPS
     },
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.SESSION_SECRET || 'keyboard cat',
+    store: new RedisStore({ client: redisClient, prefix: 'session:' }),
   })
   app.use(_session)
   app.useWebSocketAdapter(new EventsAdapter(_session))

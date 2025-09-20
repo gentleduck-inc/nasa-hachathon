@@ -1,8 +1,8 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
-import { Request } from 'express'
-import { Observable } from 'rxjs'
+import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/common'
+import type { Request } from 'express'
+import type { Observable } from 'rxjs'
 import { throwError } from '~/common/libs'
-import { AuthMessageType } from './auth.types'
+import type { AuthMessageType } from './auth.types'
 
 @Injectable()
 export class AuthGuard implements CanActivate {

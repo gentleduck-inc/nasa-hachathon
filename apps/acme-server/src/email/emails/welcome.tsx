@@ -13,11 +13,11 @@ export function WelcomeEmail({ username }: WelcomeEmailProps) {
       <Body style={main}>
         <Container style={container}>
           <Img
-            src={'https://zpgqhogoevbgpxustvmo.supabase.co/storage/v1/object/public/duck//placeholder%20(copy%201).png'}
-            width="120"
-            height="60"
             alt="acme"
+            height="60"
+            src={'https://zpgqhogoevbgpxustvmo.supabase.co/storage/v1/object/public/duck//placeholder%20(copy%201).png'}
             style={{ objectFit: 'cover', ...logo }}
+            width="120"
           />
           <Text style={paragraph}>Hi {username},</Text>
           <Text style={paragraph}>
@@ -27,7 +27,7 @@ export function WelcomeEmail({ username }: WelcomeEmailProps) {
             always ready to assist. Let’s make something great together!
           </Text>
           <Section style={btnContainer}>
-            <Button style={button} href="http://localhost:3000/dashboard/">
+            <Button href="http://localhost:3000/dashboard/" style={button}>
               Get started
             </Button>
           </Section>

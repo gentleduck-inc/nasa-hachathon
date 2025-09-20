@@ -143,3 +143,10 @@ o
     "@gentleduck/typescript-config": "workspace:*",
     "@gentleduck/variants": "workspace:*",
     "@gentleduck/vim": "workspace:*",
+
+
+
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
+

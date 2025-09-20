@@ -1,55 +1,146 @@
 'use client'
 
+import { cn } from '@gentleduck/libs/cn'
+import { MountMinimal } from '@gentleduck/primitives/mount'
 import * as React from 'react'
-import * as TabsPrimitive from '@radix-ui/react-tabs'
 
-import { cn } from '@acme/libs/cn'
+export function useTabs() {
+  const context = React.useContext(TabsContext)
+  if (context === null) {
+    throw new Error('useTabs must be used within a TabsList')
+  }
+  return context
+}
 
-const Tabs = TabsPrimitive.Root
+export interface TabsContextProps {
+  activeItem: string
+  setActiveItem: React.Dispatch<React.SetStateAction<string>>
+}
 
-const TabsList = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
+const TabsContext = React.createContext<TabsContextProps | null>(null)
+
+export interface TabsProps extends Omit<React.HTMLProps<HTMLDivElement>, 'defaultValue'> {
+  value?: string
+  defaultValue?: string
+  onValueChange?: (value: string) => void
+}
+
+function Tabs({ value, defaultValue, onValueChange, ...props }: TabsProps) {
+  const [activeItem, setActiveItem] = React.useState<string>(defaultValue ?? value ?? '')
+
+  React.useEffect(() => {
+    if (onValueChange) onValueChange(activeItem)
+  }, [activeItem])
+
+  return (
+    <TabsContext.Provider value={{ activeItem, setActiveItem }}>
+      <div {...props} aria-orientation="vertical" duck-tabs="" role="tablist" />
+    </TabsContext.Provider>
+  )
+}
+
+export interface TabsListProps extends React.HTMLProps<HTMLUListElement> {}
+const TabsList = ({ className, ref, ...props }: TabsListProps) => (
+  <ul
     className={cn(
-      'inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground',
+      'inline-flex w-fit items-center justify-center gap-2 rounded-md bg-muted p-1 text-muted-foreground',
+
       className,
     )}
-    {...props}
-  />
-))
-TabsList.displayName = TabsPrimitive.List.displayName
-
-const TabsTrigger = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
     ref={ref}
-    className={cn(
-      'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 font-medium text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm',
-      className,
-    )}
     {...props}
+    duck-tabs-list=""
   />
-))
-TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+)
 
-const TabsContent = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Content
-    ref={ref}
-    className={cn(
-      'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-      className,
-    )}
-    {...props}
-  />
-))
-TabsContent.displayName = TabsPrimitive.Content.displayName
+export interface TabsTriggerProps extends React.HTMLProps<HTMLLIElement> {
+  value: string
+  defaultChecked?: boolean
+}
+
+const TabsTrigger = ({
+  className,
+  children,
+  defaultChecked,
+  onClick,
+  value,
+  disabled,
+  ref,
+  ...props
+}: TabsTriggerProps) => {
+  const { setActiveItem, activeItem } = useTabs()
+  const isActive = value === activeItem
+
+  React.useEffect(() => {
+    if (defaultChecked) setActiveItem(value)
+  }, [defaultChecked])
+
+  return (
+    <li
+      className={cn(
+        'relative inline-flex h-[29.04px] items-center justify-center whitespace-nowrap rounded-sm px-3 font-medium text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        isActive && 'bg-background text-foreground shadow-sm',
+        disabled && 'pointer-events-none opacity-50',
+        className,
+      )}
+      data-selected={isActive}
+      data-value={value}
+      id={`tab-${value}`}
+      ref={ref}
+      {...props}
+      duck-tabs-trigger="">
+      <input
+        checked={isActive}
+        className="absolute inset-0 appearance-none rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        defaultChecked={defaultChecked}
+        disabled={disabled}
+        id={value}
+        name="tab"
+        onChange={() => setActiveItem(value)}
+        type="radio"
+        value={value}
+      />
+      <label className="flex items-center gap-2 font-medium" htmlFor={value}>
+        {children}
+      </label>
+    </li>
+  )
+}
+
+const TabsContent = ({
+  children,
+  forceMount = false,
+  className,
+  value,
+  ref,
+  ...props
+}: React.HTMLProps<HTMLDivElement> & {
+  value: string
+  forceMount?: boolean
+}) => {
+  const { activeItem } = useTabs()
+  const localRef = React.useRef<HTMLDivElement>(null)
+
+  return (
+    <div
+      aria-hidden={activeItem !== value}
+      className={cn(
+        'mt-2 shrink-0 list-none ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        activeItem === value ? 'h-auto opacity-100' : 'h-0 opacity-0',
+        className,
+      )}
+      data-value={value}
+      hidden={activeItem !== value}
+      ref={localRef}
+      role="tabpanel"
+      tabIndex={-1}
+      {...props}
+      duck-tabs-content="">
+      <MountMinimal forceMount={forceMount} open={activeItem === value} ref={null}>
+        {children}
+      </MountMinimal>
+    </div>
+  )
+}
 
 export { Tabs, TabsList, TabsTrigger, TabsContent }

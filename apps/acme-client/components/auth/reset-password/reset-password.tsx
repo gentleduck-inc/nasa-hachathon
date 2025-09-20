@@ -1,7 +1,7 @@
 'use client'
-import { cn } from '@acme/libs/cn'
 import { Button } from '@acme/ui/button'
-import { Form, FormLabel } from '@acme/ui/form'
+import { Form, FormLabel } from '@acme/ui/react-hook-form'
+import { cn } from '@gentleduck/libs/cn'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useAtomValue } from 'jotai'
@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { ResetPasswordSchemaType, resetPasswordSchema } from '~/server/auth/auth.dto'
+import { type ResetPasswordSchemaType, resetPasswordSchema } from '~/server/auth/auth.dto'
 import { userAtom } from '../auth.atom'
 import { PasswordInput } from '../auth.chunks'
 import { handleResetPassword } from './reset-password.libs'
@@ -21,12 +21,12 @@ export function ResetPasswordPage() {
   const user = useAtomValue(userAtom)
 
   const form = useForm<ResetPasswordSchemaType>({
-    resolver: zodResolver(resetPasswordSchema),
-    mode: 'onChange',
     defaultValues: {
-      user_id: String(user?.id),
       password: '',
+      user_id: String(user?.id),
     },
+    mode: 'onChange',
+    resolver: zodResolver(resetPasswordSchema),
   })
 
   const resetPasswordMutation = useMutation({
@@ -51,16 +51,16 @@ export function ResetPasswordPage() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+        <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
           <div className="grid gap-2">
             <FormLabel>Password</FormLabel>
             <PasswordInput form={form} mutation={resetPasswordMutation} />
           </div>
 
           <Button
-            type="submit"
             className="w-full cursor-pointer"
-            disabled={!form.formState.isValid || resetPasswordMutation.isPending}>
+            disabled={!form.formState.isValid || resetPasswordMutation.isPending}
+            type="submit">
             {resetPasswordMutation.isPending && <Loader2 className="size-4 animate-spin" />}
             Reset Password
           </Button>

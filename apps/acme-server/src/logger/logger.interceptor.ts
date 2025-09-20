@@ -1,7 +1,7 @@
-import { CallHandler, ExecutionContext, Inject, Injectable, NestInterceptor } from '@nestjs/common'
-import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
-import { Observable, tap } from 'rxjs'
-import { LoggerService } from './logger.service'
+import { type CallHandler, type ExecutionContext, Inject, Injectable, type NestInterceptor } from '@nestjs/common'
+import { WINSTON_MODULE_NEST_PROVIDER, type WinstonLogger } from 'nest-winston'
+import { type Observable, tap } from 'rxjs'
+import type { LoggerService } from './logger.service'
 
 @Injectable()
 export class LoggerInterceptor implements NestInterceptor {
@@ -21,11 +21,11 @@ export class LoggerInterceptor implements NestInterceptor {
       tap(() => {
         const delay = Date.now() - now
         this.logger.log({
-          message: `${method} ${url} - ${delay}ms`,
           context: 'HTTP',
+          delay,
+          message: `${method} ${url} - ${delay}ms`,
           method,
           url,
-          delay,
           ...metadata,
         })
       }),

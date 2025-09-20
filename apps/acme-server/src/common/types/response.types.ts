@@ -1,4 +1,4 @@
-export type ResponseType<TData extends unknown, TMessage extends readonly string[] = any> =
+export type ResponseType<TData, TMessage extends readonly string[] = any> =
   | {
       state: 'error'
       message: TMessage[number]

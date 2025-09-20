@@ -1,9 +1,9 @@
-import { User } from '@acme/db/types'
+import type { User } from '@acme/db/types'
 import axios from 'axios'
 import { toast } from 'sonner'
 import { libResponse } from '~/libs/libResponse'
-import { SigninSchemaType } from '~/server/auth/auth.dto'
-import { ResponseType } from '~/server/common/types'
+import type { SigninSchemaType } from '~/server/auth/auth.dto'
+import type { ResponseType } from '~/server/common/types'
 
 export async function handleSignin(_data: SigninSchemaType): Promise<ResponseType<Omit<User, 'password'>>> {
   try {

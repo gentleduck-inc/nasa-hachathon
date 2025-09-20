@@ -1,12 +1,12 @@
 'use client'
-import { IconLogout } from '@tabler/icons-react'
-import { useRouter } from 'next/navigation'
-import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { handleSignout } from './signout.libs'
-import { userAtom } from '../auth.atom'
-import { useSetAtom } from 'jotai'
 import { Button } from '@acme/ui/button'
+import { IconLogout } from '@tabler/icons-react'
+import { useMutation } from '@tanstack/react-query'
+import { useSetAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { userAtom } from '../auth.atom'
+import { handleSignout } from './signout.libs'
 
 export function Signout() {
   const router = useRouter()
@@ -14,6 +14,9 @@ export function Signout() {
 
   const { mutate } = useMutation({
     mutationFn: handleSignout,
+    onError: (error: Error) => {
+      toast.error(error.name)
+    },
     onSuccess: (data) => {
       if (data?.state === 'success') {
         localStorage.setItem('user', JSON.stringify(''))
@@ -22,13 +25,10 @@ export function Signout() {
         router.push('/auth/signin')
       }
     },
-    onError: (error: Error) => {
-      toast.error(error.name)
-    },
   })
 
   return (
-    <Button onClick={() => mutate()} variant="ghost" size="sm" className="flex items-center gap-2 justify-start w-full">
+    <Button className="flex w-full items-center justify-start gap-2" onClick={() => mutate()} size="sm" variant="ghost">
       <IconLogout />
       Log out
     </Button>

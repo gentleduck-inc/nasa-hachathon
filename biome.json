@@ -92,7 +92,10 @@
       "semicolons": "asNeeded",
       "trailingCommas": "all"
     },
-    "globals": ["Global1"]
+    "globals": ["Global1"],
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    }
   },
   "linter": {
     "enabled": true,

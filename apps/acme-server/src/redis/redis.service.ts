@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import { createClient, RedisClientType } from 'redis'
+import type { ConfigService } from '@nestjs/config'
+import { createClient, type RedisClientType } from 'redis'
 
 @Injectable()
 export class RedisService {
@@ -14,7 +14,7 @@ export class RedisService {
     })
     redisClient.connect()
     console.log('✅ Redis connected')
-    // @ts-ignore
+    // @ts-expect-error
     return redisClient
   }
 }

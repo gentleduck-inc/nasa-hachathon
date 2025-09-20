@@ -9,11 +9,11 @@ export function WaitlistEmail() {
       <Body style={main}>
         <Container style={container}>
           <Img
-            src={'https://zpgqhogoevbgpxustvmo.supabase.co/storage/v1/object/public/duck//placeholder%20(copy%201).png'}
-            width="120"
-            height="60"
             alt="acme"
+            height="60"
+            src={'https://zpgqhogoevbgpxustvmo.supabase.co/storage/v1/object/public/duck//placeholder%20(copy%201).png'}
             style={{ objectFit: 'cover', ...logo }}
+            width="120"
           />
 
           <Text style={paragraph}>Hi Friend,</Text>

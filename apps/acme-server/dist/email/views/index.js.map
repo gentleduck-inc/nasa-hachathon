@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../../src/email/views/index.ts"],"sourcesContent":["export { emailHtml } from './welcome.view'\n"],"names":["emailHtml"],"mappings":";;;;+BAASA;;;eAAAA,sBAAS;;;6BAAQ"}

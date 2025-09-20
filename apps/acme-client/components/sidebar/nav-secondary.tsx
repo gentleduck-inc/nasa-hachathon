@@ -1,9 +1,8 @@
 'use client'
 
-import * as React from 'react'
-import { type Icon } from '@tabler/icons-react'
-
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@acme/ui/sidebar'
+import type { Icon } from '@tabler/icons-react'
+import type * as React from 'react'
 
 export function NavSecondary({
   items,

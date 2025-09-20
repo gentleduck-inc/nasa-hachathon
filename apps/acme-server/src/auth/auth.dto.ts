@@ -1,16 +1,16 @@
 import { z } from 'zod'
-import { AuthMessageType } from './auth.types'
+import type { AuthMessageType } from './auth.types'
 
 const errorMessage = <T extends AuthMessageType>(message: T) => ({ message })
 
 export const signinSchema = z.object({
-  username: z
-    .string({ ...errorMessage('ZOD_EXPECTED_STRING') })
-    .min(3, { ...errorMessage('ZOD_TOO_SHORT') })
-    .max(30, { ...errorMessage('ZOD_TOO_LONG') }),
   password: z
     .string({ ...errorMessage('ZOD_EXPECTED_STRING') })
     .min(8, { ...errorMessage('ZOD_TOO_SHORT') })
+    .max(30, { ...errorMessage('ZOD_TOO_LONG') }),
+  username: z
+    .string({ ...errorMessage('ZOD_EXPECTED_STRING') })
+    .min(3, { ...errorMessage('ZOD_TOO_SHORT') })
     .max(30, { ...errorMessage('ZOD_TOO_LONG') }),
 })
 export type SignupSchemaType = z.infer<typeof signupSchema>

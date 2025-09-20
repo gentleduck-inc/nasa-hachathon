@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { libResponse } from '~/libs/libResponse'
-import { ResetPasswordSchemaType } from '~/server/auth/auth.dto'
+import type { ResetPasswordSchemaType } from '~/server/auth/auth.dto'
 
 export async function handleResetPassword(_data: ResetPasswordSchemaType) {
   try {

@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream'
+import type { Readable } from 'node:stream'
 import {
   CreateBucketCommand,
   GetObjectCommand,
@@ -7,11 +7,11 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3'
 import { Inject, Injectable, Logger } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import type { ConfigService } from '@nestjs/config'
+import { WINSTON_MODULE_NEST_PROVIDER, type WinstonLogger } from 'nest-winston'
 import { throwError } from '~/common/libs'
-import { MinioMessageType } from './minio.types'
 import { LoggerService } from '~/logger'
-import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
+import type { MinioMessageType } from './minio.types'
 
 @Injectable()
 export class MinioService {
@@ -27,13 +27,13 @@ export class MinioService {
     this.bucket = this.config.get<string>('MINIO_BUCKET') || 'uploads'
 
     this.s3 = new S3Client({
-      region: this.config.get<string>('MINIO_REGION') ?? 'us-east-1',
-      endpoint: this.config.get<string>('MINIO_ENDPOINT') ?? 'http://localhost:9000',
       credentials: {
         accessKeyId: this.config.get<string>('MINIO_ACCESS_KEY') ?? 'root',
         secretAccessKey: this.config.get<string>('MINIO_SECRET_KEY') ?? 'root',
       },
+      endpoint: this.config.get<string>('MINIO_ENDPOINT') ?? 'http://localhost:9000',
       forcePathStyle: true,
+      region: this.config.get<string>('MINIO_REGION') ?? 'us-east-1',
     })
   }
 
@@ -50,10 +50,10 @@ export class MinioService {
     try {
       await this.ensureBucketExists()
       const command = new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
         Body: body,
+        Bucket: this.bucket,
         ContentType: contentType,
+        Key: key,
       })
 
       await this.s3.send(command)
