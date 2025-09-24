@@ -12,46 +12,65 @@ import {
 } from '@acme/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@acme/ui/sidebar'
 import { IconCreditCard, IconDotsVertical, IconNotification, IconUserCircle } from '@tabler/icons-react'
+import { useQuery } from '@tanstack/react-query'
 import { Signout } from '../auth/signout'
+import axios from 'axios'
+import { User } from '@acme/db/types'
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+export function NavUser() {
   const { isMobile } = useSidebar()
+
+  const { data: user, isLoading } = useQuery({
+    queryFn: async () => {
+      const { data } = await axios.get(process.env.NEXT_PUBLIC_API_URL + '/v1/auth/me', {
+        withCredentials: true,
+      })
+      return data.data as User
+    },
+    queryKey: ['session'],
+    retry: false,
+  })
+  // console.log(data, isLoading)
+
+  // const user = {
+  //   avatar: 'https://avatars.githubusercontent.com/u/108896341',
+  //   email: 'wildduck@iusevimbtw.com',
+  //   name: 'Wildduck',
+  // }
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu placement={isMobile ? 'bottom-end' : 'right-end'} sideOffset={4}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               size="lg">
-              <Avatar alt={user.name} className="h-8 w-8 rounded-lg" fallback={user.name} src={user.avatar} />
+              <Avatar
+                alt={user?.username}
+                className="h-8 w-8 rounded-lg"
+                fallback={user?.username}
+                src={user?.avatar_url as string}
+              />
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-muted-foreground text-xs">{user.email}</span>
+                <span className="truncate font-medium">{user?.username}</span>
+                <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
               </div>
               <IconDotsVertical className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? 'bottom' : 'right'}
-            sideOffset={4}>
+          <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg">
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar alt={user.name} className="h-8 w-8 rounded-lg" fallback={user.name} src={user.avatar} />
+                <Avatar
+                  alt={user?.username}
+                  className="h-8 w-8 rounded-lg"
+                  fallback={user?.username}
+                  src={user?.avatar_url as string}
+                />
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-muted-foreground text-xs">{user.email}</span>
+                  <span className="truncate font-medium">{user?.username}</span>
+                  <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

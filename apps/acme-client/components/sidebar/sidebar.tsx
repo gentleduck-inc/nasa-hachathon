@@ -1,145 +1,21 @@
 'use client'
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem } from '@acme/ui/sidebar'
-import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from '@tabler/icons-react'
+import { Asterisk } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type * as React from 'react'
-import { NavDocuments } from './nav-documents'
 import { NavMain } from './nav-main'
-import { NavSecondary } from './nav-secondary'
 import { NavUser } from './nav-user'
 
 const data = {
-  documents: [
-    {
-      icon: IconDatabase,
-      name: 'Data Library',
-      url: '#',
-    },
-    {
-      icon: IconReport,
-      name: 'Reports',
-      url: '#',
-    },
-    {
-      icon: IconFileWord,
-      name: 'Word Assistant',
-      url: '#',
-    },
-  ],
-  navClouds: [
-    {
-      icon: IconCamera,
-      isActive: true,
-      items: [
-        {
-          title: 'Active Proposals',
-          url: '#',
-        },
-        {
-          title: 'Archived',
-          url: '#',
-        },
-      ],
-      title: 'Capture',
-      url: '#',
-    },
-    {
-      icon: IconFileDescription,
-      items: [
-        {
-          title: 'Active Proposals',
-          url: '#',
-        },
-        {
-          title: 'Archived',
-          url: '#',
-        },
-      ],
-      title: 'Proposal',
-      url: '#',
-    },
-    {
-      icon: IconFileAi,
-      items: [
-        {
-          title: 'Active Proposals',
-          url: '#',
-        },
-        {
-          title: 'Archived',
-          url: '#',
-        },
-      ],
-      title: 'Prompts',
-      url: '#',
-    },
-  ],
   navMain: [
     {
-      icon: IconDashboard,
-      title: 'Dashboard',
-      url: '#',
-    },
-    {
-      icon: IconListDetails,
-      title: 'Lifecycle',
-      url: '#',
-    },
-    {
-      icon: IconChartBar,
-      title: 'Analytics',
-      url: '#',
-    },
-    {
-      icon: IconFolder,
-      title: 'Projects',
-      url: '#',
-    },
-    {
-      icon: IconUsers,
-      title: 'Team',
-      url: '#',
+      icon: Asterisk,
+      title: 'Waste Materials',
+      url: '/waste-materials',
     },
   ],
-  navSecondary: [
-    {
-      icon: IconSettings,
-      title: 'Settings',
-      url: '#',
-    },
-    {
-      icon: IconHelp,
-      title: 'Get Help',
-      url: '#',
-    },
-    {
-      icon: IconSearch,
-      title: 'Search',
-      url: '#',
-    },
-  ],
-  user: {
-    avatar: 'https://avatars.githubusercontent.com/u/108896341',
-    email: 'wildduck@iusevimbtw.com',
-    name: 'Wildduck',
-  },
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -158,18 +34,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   width={200}
                 />
               </div>
-              <code className="font-bold font-mono">@gentleduck</code>
+              <code className="font-bold font-mono">@Re-Cycle</code>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary className="mt-auto" items={data.navSecondary} />
+        {
+          // <NavSecondary className="mt-auto" items={data.navMain} />
+          // <NavDocuments items={data.} />
+        }
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   )

@@ -9,21 +9,65 @@ export function SiteHeader() {
     <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
-        <Separator className="mx-2 data-[orientation=vertical]:h-4" orientation="vertical" />
-        <h1 className="font-medium text-base">Documents</h1>
-        <div className="ml-auto flex items-center gap-2">
-          <Button asChild className="hidden sm:flex" size="sm" variant="ghost">
-            <Link
-              className="dark:text-foreground"
-              href="https://github.com/wildduck2/gentleduck-document"
-              rel="noopener noreferrer"
-              target="_blank">
-              <Github />
-              GitHub
-            </Link>
-          </Button>
-        </div>
+        <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+        <BreadcrumbPath />
+
+        <div className="ml-auto flex items-center gap-2"></div>
       </div>
     </header>
+  )
+}
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@acme/ui/breadcrumb'
+import React from 'react'
+import { usePathname } from 'next/navigation'
+
+function formatSegment(segment: string) {
+  return segment
+    .replace(/[-_]/g, ' ') // replace - and _ with spaces
+    .replace(/\b\w/g, (c) => c.toUpperCase()) // capitalize each word
+}
+
+export function BreadcrumbPath() {
+  const pathname = usePathname()
+  const segments = pathname.split('/').filter(Boolean) // remove empty
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        {/* First item = TBYB (always link to /) */}
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/">TBYB</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+
+        {segments.map((segment, index) => {
+          const isLast = index === segments.length - 1
+          const href = '/' + segments.slice(0, index + 1).join('/')
+
+          return (
+            <React.Fragment key={href}>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{formatSegment(segment)}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link href={href}>{formatSegment(segment)}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
+          )
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
   )
 }

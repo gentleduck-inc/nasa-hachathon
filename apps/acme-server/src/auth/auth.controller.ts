@@ -104,9 +104,27 @@ export class AuthController {
   @Get('me')
   @UseGuards(AuthGuard)
   async me(
-    @Body(new ZodValidationPipe(withIDSchema)) body: GetUserDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Session() session: SessionData,
   ): Promise<ResponseType<Awaited<ReturnType<typeof this.authService.getAccountInformation>>, typeof AuthMessages>> {
-    const user = await this.authService.getAccountInformation(body)
+    const user = await this.authService.getAccountInformation({
+      user_id: session.user.id,
+    })
+    if (!user) {
+      return new Promise((resolve, reject) => {
+        req.session.destroy((err) => {
+          if (err) {
+            console.error('Session destruction error:', err)
+            reject({ message: 'Could not destroy session', state: 'error' })
+          } else {
+            res.clearCookie('connect.sid')
+            resolve({ message: 'AUTH_GET_ACCOUNT_INFORMATION_FAILED', state: 'error' })
+          }
+        })
+      })
+    }
+
     return { data: user, message: 'AUTH_GET_ACCOUNT_INFORMATION_SUCCESS', state: 'success' }
   }
 

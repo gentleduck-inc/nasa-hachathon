@@ -1,98 +1,75 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+Nice — if we’re turning **Re-Cycle** into an actual app with an API, let’s think in terms of the core **entities** and **flows** you’ll need. For a smart recycling system, you probably have:
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+* **Users (astronauts/crew, admins, AI monitors)**
+* **Waste items (the trash to be recycled)**
+* **Recycling processes (tracking decomposition, shredding, repurposing, 3D printing, etc.)**
+* **Inventory (usable materials produced after recycling)**
+* **Reports/analytics (waste generated, recycled, reused, saved space)**
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Here’s a good baseline of endpoints you’d need:
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### **Auth & Users**
 
-## Project setup
+* `POST /auth/register` – register a new user (admin/crew)
+* `POST /auth/login` – login and get a token
+* `GET /users/me` – get profile of logged-in user
+* `PATCH /users/:id` – update user info (role, shift, permissions)
 
-```bash
-$ pnpm install
-```
+---
 
-## Compile and run the project
+### **Waste Management**
 
-```bash
-# development
-$ pnpm run start
+* `POST /waste` – log new waste item (e.g., “plastic packaging, 2kg”)
+* `GET /waste` – list all logged waste items (with filters: type, status, date)
+* `GET /waste/:id` – get details of one waste item
+* `PATCH /waste/:id` – update waste item (e.g., status from *collected → in-processing*)
+* `DELETE /waste/:id` – remove a wrongly logged item
 
-# watch mode
-$ pnpm run start:dev
+---
 
-# production mode
-$ pnpm run start:prod
-```
+### **Recycling Process**
 
-## Run tests
+* `POST /process/start` – start recycling a batch of waste
+* `PATCH /process/:id/step` – move process forward (shredding → melting → material recovery)
+* `GET /process/:id` – get recycling process status & logs
+* `GET /process` – list all active/finished processes
 
-```bash
-# unit tests
-$ pnpm run test
+---
 
-# e2e tests
-$ pnpm run test:e2e
+### **Inventory (Recovered Materials)**
 
-# test coverage
-$ pnpm run test:cov
-```
+* `GET /inventory` – list available recycled materials (plastic pellets, fibers, metals, etc.)
+* `POST /inventory` – add new recovered material (manual/admin entry if needed)
+* `PATCH /inventory/:id` – update stock (when consumed for 3D printing, repairs, etc.)
+* `DELETE /inventory/:id` – remove an entry
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### **Reports & Analytics**
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+* `GET /reports/summary` – overall stats (waste generated, % recycled, % reused, space saved)
+* `GET /reports/timeline` – waste vs recycling trends over time
+* `GET /reports/by-type` – breakdown (plastic, fabric, electronics, etc.)
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### **(Optional Future Endpoints)**
 
-## Resources
+* `POST /alerts` – notify crew if waste exceeds threshold
+* `POST /ai/analyze` – run ML model to auto-categorize waste from photo/scanner
+* `GET /sustainability` – simulate mission lifetime extension based on recycling efficiency
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+👉 If you’re building this as a **hackathon MVP**, you’ll likely start with just:
 
-## Support
+* Auth
+* Waste CRUD
+* Process tracking
+* Inventory
+* Basic reports
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Do you want me to **map these endpoints to actual REST routes with payload examples (JSON bodies + responses)** so you can directly implement them in, say, a NestJS backend?
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

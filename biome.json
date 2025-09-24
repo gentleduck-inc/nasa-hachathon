@@ -157,7 +157,6 @@
           }
         }
       },
-      "recommended": true,
       "style": {
         "useImportType": "off"
       },

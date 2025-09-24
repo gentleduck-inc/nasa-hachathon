@@ -52,6 +52,43 @@ export class AuthService {
     }
   }
 
+  async signup(data: SignupDto) {
+    try {
+      const password_hash = await PasswordHasher.hashPassword(data.password)
+
+      const insertedUsers = await this.db
+        .insert(schema.users)
+        .values({
+          password_hash,
+          email: data.email,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          username: data.username,
+        })
+        .returning()
+
+      if (!insertedUsers?.length) {
+        throwError<AuthMessageType>('AUTH_REGISTRATION_FAILED')
+        return
+      }
+      const user = insertedUsers[0]
+      const { password_hash: _, ...safeUser } = user
+      return safeUser
+    } catch (error) {
+      if (String((error as DrizzleError).cause).includes('user_table_user_name_unique')) {
+        throwError<AuthMessageType>('AUTH_USERNAME_ALREADY_EXISTS')
+        return
+      }
+
+      if (String((error as DrizzleError).cause).includes('user_table_email_unique')) {
+        throwError<AuthMessageType>('AUTH_EMAIL_ALREADY_EXISTS')
+        return
+      }
+
+      throwError<AuthMessageType>('AUTH_REGISTRATION_FAILED')
+    }
+  }
+
   async getAccountInformation(data: GetUserDto) {
     try {
       const user = await this.db.query.users.findFirst({
@@ -60,6 +97,10 @@ export class AuthService {
           first_name: true,
           id: true,
           last_name: true,
+          avatar_url: true,
+          settings: true,
+          role: true,
+          username: true,
         },
         where: eq(schema.users.id, data.user_id),
       })
