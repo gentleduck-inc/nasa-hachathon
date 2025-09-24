@@ -4,7 +4,7 @@ import type { SessionData } from 'express-session'
 import { ErrorExceptionFilter } from '~/common/exceptions'
 import { ZodValidationPipe } from '~/common/pipes'
 import type { ResponseType } from '~/common/types'
-import { type EmailService, TemplateText } from '~/email'
+import { EmailService, TemplateText } from '~/email'
 import type { AuthMessages } from './auth.constants'
 import {
   forgotPasswordSchema,
@@ -15,7 +15,7 @@ import {
   withIDSchema,
 } from './auth.dto'
 import { AuthGuard } from './auth.guard'
-import type { AuthService } from './auth.service'
+import { AuthService } from './auth.service'
 import type {
   ForgotPasswordDto,
   GetUserDto,
@@ -42,7 +42,7 @@ export class AuthController {
     try {
       console.log(session)
       const data = await this.authService.signin(body)
-      session.user = data!
+      session.user = data as never
       // session = { ...session, user: data! }
 
       return {
@@ -70,7 +70,7 @@ export class AuthController {
         subject: TemplateText.welcome.subject,
         template: {
           args: {
-            username: user.userName,
+            username: user.username,
           },
           name: 'welcome',
         },
@@ -116,12 +116,12 @@ export class AuthController {
   ): Promise<ResponseType<Awaited<ReturnType<typeof this.authService.forgotPassword>>, typeof AuthMessages>> {
     const data = await this.authService.forgotPassword(body)
 
-    if (data!.otp) {
+    if (data?.otp) {
       this.emailService.sendTestEmail({
         subject: TemplateText.forgot_password.subject,
         template: {
           args: {
-            code: data!.otp[0].otp,
+            code: data?.otp[0]?.code,
           },
           name: 'forgot-password',
         },
@@ -130,7 +130,7 @@ export class AuthController {
       })
     }
 
-    return { data: data!.user as never, message: 'AUTH_FORGOT_PASSWORD_EMAIL_SENT', state: 'success' }
+    return { data: data?.user as never, message: 'AUTH_FORGOT_PASSWORD_EMAIL_SENT', state: 'success' }
   }
 
   @Post('reset-password')

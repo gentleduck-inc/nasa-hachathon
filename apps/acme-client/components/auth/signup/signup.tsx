@@ -23,10 +23,11 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
   const form = useForm<SignupSchemaType>({
     defaultValues: {
       email: '',
-      name: '',
+      username: '',
       password: '',
       passwordConfirm: '',
-      username: '',
+      lastName: '',
+      firstName: '',
     },
     mode: 'onChange',
     resolver: zodResolver(signupSchemaClient),
@@ -57,10 +58,26 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
 
       <Form {...form}>
         <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid gap-2">
+          {/* First Name */}
+          <div className="grid grid-cols-2 gap-2">
             <FormField
               control={form.control}
-              name="name"
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" type="text" {...field} disabled={signupMutation.isPending} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Last Name */}
+            <FormField
+              control={form.control}
+              name="lastName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
@@ -73,6 +90,7 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
             />
           </div>
 
+          {/* Username */}
           <div className="grid gap-2">
             <FormField
               control={form.control}
@@ -89,6 +107,7 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
             />
           </div>
 
+          {/* Email */}
           <div className="grid gap-2">
             <FormField
               control={form.control}
@@ -110,11 +129,24 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
             />
           </div>
 
+          {/* Password */}
           <div className="grid gap-2">
-            <FormLabel>Password</FormLabel>
-            <PasswordInput form={form} mutation={signupMutation} />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <PasswordInput {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
+          {/* Confirm Password */}
           <div className="grid gap-2">
             <FormField
               control={form.control}
@@ -123,12 +155,7 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Confirm your password"
-                      type="password"
-                      {...field}
-                      disabled={signupMutation.isPending}
-                    />
+                    <PasswordInput {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -136,6 +163,7 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
             />
           </div>
 
+          {/* Submit */}
           <Button
             className="w-full cursor-pointer"
             disabled={signupMutation.isPending || !form.formState.isValid}
@@ -155,12 +183,3 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
     </div>
   )
 }
-
-// <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-border after:border-t">
-//   <span className="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
-// </div>
-//
-// <Button variant="outline" className="w-full" onClick={handleGithubSignup} disabled={githubMutation.isPending}>
-//   {githubMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
-//   Sign up with Google
-// </Button>

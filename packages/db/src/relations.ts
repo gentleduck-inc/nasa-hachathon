@@ -6,66 +6,33 @@ import {
   comments,
   missionCrew,
   missions,
-  organizations,
   processingModules,
   processingRecipes,
   products,
+  recyclingScenarios,
   searchIndex,
   settings,
   simulationRuns,
-  userRoles,
   users,
   wasteMaterials,
 } from './tables'
 
 /**
- * Organization relations - root tenant entity
- */
-export const organizationRelations = relations(organizations, ({ many }) => ({
-  auditLogs: many(auditLogs),
-  missions: many(missions),
-  processingModules: many(processingModules),
-  processingRecipes: many(processingRecipes),
-  searchIndex: many(searchIndex),
-  settings: many(settings),
-  users: many(users),
-  wasteMaterials: many(wasteMaterials),
-}))
-
-/**
  * User relations
  */
-export const userRelations = relations(users, ({ one, many }) => ({
+export const userRelations = relations(users, ({ many }) => ({
   apiKeys: many(apiKeys),
   attachments: many(attachments),
   auditLogs: many(auditLogs),
   comments: many(comments),
-  grantedRoles: many(userRoles, {
-    relationName: 'roleGranter',
-  }),
+  createdMissions: many(missions),
+  createdModules: many(processingModules),
+  createdRecipes: many(processingRecipes),
+  createdScenarios: many(recyclingScenarios),
+  createdWasteMaterials: many(wasteMaterials),
   missionAssignments: many(missionCrew),
-  organization: one(organizations, {
-    fields: [users.organization_id],
-    references: [organizations.id],
-  }),
-  roles: many(userRoles),
   settings: many(settings),
   simulationRuns: many(simulationRuns),
-}))
-
-/**
- * User roles relations
- */
-export const userRoleRelations = relations(userRoles, ({ one }) => ({
-  grantedBy: one(users, {
-    fields: [userRoles.granted_by],
-    references: [users.id],
-    relationName: 'roleGranter',
-  }),
-  user: one(users, {
-    fields: [userRoles.user_id],
-    references: [users.id],
-  }),
 }))
 
 /**
@@ -82,11 +49,11 @@ export const apiKeyRelations = relations(apiKeys, ({ one }) => ({
  * Mission relations
  */
 export const missionRelations = relations(missions, ({ one, many }) => ({
-  crew: many(missionCrew),
-  organization: one(organizations, {
-    fields: [missions.organization_id],
-    references: [organizations.id],
+  createdBy: one(users, {
+    fields: [missions.created_by],
+    references: [users.id],
   }),
+  crew: many(missionCrew),
   products: many(products),
   simulationRuns: many(simulationRuns),
 }))
@@ -109,9 +76,9 @@ export const missionCrewRelations = relations(missionCrew, ({ one }) => ({
  * Waste materials relations
  */
 export const wasteMaterialRelations = relations(wasteMaterials, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [wasteMaterials.organization_id],
-    references: [organizations.id],
+  createdBy: one(users, {
+    fields: [wasteMaterials.created_by],
+    references: [users.id],
   }),
 }))
 
@@ -119,9 +86,9 @@ export const wasteMaterialRelations = relations(wasteMaterials, ({ one }) => ({
  * Processing modules relations
  */
 export const processingModuleRelations = relations(processingModules, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [processingModules.organization_id],
-    references: [organizations.id],
+  createdBy: one(users, {
+    fields: [processingModules.created_by],
+    references: [users.id],
   }),
 }))
 
@@ -129,11 +96,22 @@ export const processingModuleRelations = relations(processingModules, ({ one }) 
  * Processing recipes relations
  */
 export const processingRecipeRelations = relations(processingRecipes, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [processingRecipes.organization_id],
-    references: [organizations.id],
+  createdBy: one(users, {
+    fields: [processingRecipes.created_by],
+    references: [users.id],
   }),
   products: many(products),
+}))
+
+/**
+ * Recycling scenarios relations
+ */
+export const recyclingScenarioRelations = relations(recyclingScenarios, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [recyclingScenarios.created_by],
+    references: [users.id],
+  }),
+  simulationRuns: many(simulationRuns),
 }))
 
 /**
@@ -149,6 +127,10 @@ export const simulationRunRelations = relations(simulationRuns, ({ one, many }) 
     references: [missions.id],
   }),
   products: many(products),
+  scenario: one(recyclingScenarios, {
+    fields: [simulationRuns.scenario_id],
+    references: [recyclingScenarios.id],
+  }),
 }))
 
 /**
@@ -201,10 +183,6 @@ export const attachmentRelations = relations(attachments, ({ one }) => ({
  * Audit logs relations
  */
 export const auditLogRelations = relations(auditLogs, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [auditLogs.organization_id],
-    references: [organizations.id],
-  }),
   user: one(users, {
     fields: [auditLogs.user_id],
     references: [users.id],
@@ -215,110 +193,8 @@ export const auditLogRelations = relations(auditLogs, ({ one }) => ({
  * Settings relations
  */
 export const settingRelations = relations(settings, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [settings.organization_id],
-    references: [organizations.id],
-  }),
   user: one(users, {
     fields: [settings.user_id],
     references: [users.id],
   }),
 }))
-
-/**
- * Search index relations
- */
-export const searchIndexRelations = relations(searchIndex, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [searchIndex.organization_id],
-    references: [organizations.id],
-  }),
-}))
-
-// Type-safe relation helpers for common queries
-
-/**
- * Organization with all related data
- */
-export type OrganizationWithRelations = typeof organizations.$inferSelect & {
-  users?: (typeof users.$inferSelect)[]
-  missions?: (typeof missions.$inferSelect)[]
-  wasteMaterials?: (typeof wasteMaterials.$inferSelect)[]
-  processingModules?: (typeof processingModules.$inferSelect)[]
-  processingRecipes?: (typeof processingRecipes.$inferSelect)[]
-}
-
-/**
- * User with organization and roles
- */
-export type UserWithRelations = typeof users.$inferSelect & {
-  organization?: typeof organizations.$inferSelect
-  roles?: (typeof userRoles.$inferSelect)[]
-  apiKeys?: (typeof apiKeys.$inferSelect)[]
-  missionAssignments?: (typeof missionCrew.$inferSelect & {
-    mission?: typeof missions.$inferSelect
-  })[]
-}
-
-/**
- * Mission with crew and runs
- */
-export type MissionWithRelations = typeof missions.$inferSelect & {
-  organization?: typeof organizations.$inferSelect
-  crew?: (typeof missionCrew.$inferSelect & {
-    user?: typeof users.$inferSelect
-  })[]
-  simulationRuns?: (typeof simulationRuns.$inferSelect)[]
-  products?: (typeof products.$inferSelect)[]
-}
-
-/**
- * Simulation run with all results
- */
-export type SimulationRunWithRelations = typeof simulationRuns.$inferSelect & {
-  mission?: typeof missions.$inferSelect
-  createdBy?: typeof users.$inferSelect
-  products?: (typeof products.$inferSelect & {
-    recipe?: typeof processingRecipes.$inferSelect
-  })[]
-}
-
-/**
- * Product with source data
- */
-export type ProductWithRelations = typeof products.$inferSelect & {
-  simulationRun?: typeof simulationRuns.$inferSelect
-  mission?: typeof missions.$inferSelect
-  recipe?: typeof processingRecipes.$inferSelect
-}
-
-/**
- * Comment with author and replies
- */
-export type CommentWithRelations = typeof comments.$inferSelect & {
-  author?: typeof users.$inferSelect
-  parentComment?: typeof comments.$inferSelect
-  replies?: (typeof comments.$inferSelect)[]
-}
-
-/**
- * Processing recipe with organization
- */
-export type ProcessingRecipeWithRelations = typeof processingRecipes.$inferSelect & {
-  organization?: typeof organizations.$inferSelect
-  products?: (typeof products.$inferSelect)[]
-}
-
-/**
- * Waste material with organization
- */
-export type WasteMaterialWithRelations = typeof wasteMaterials.$inferSelect & {
-  organization?: typeof organizations.$inferSelect
-}
-
-/**
- * Processing module with organization
- */
-export type ProcessingModuleWithRelations = typeof processingModules.$inferSelect & {
-  organization?: typeof organizations.$inferSelect
-}

@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import type { Response } from 'express'
 import type { ResponseType } from '~/common/types'
 import type { MinioMessage } from './minio.constants'
-import type { MinioService } from './minio.service'
+import { MinioService } from './minio.service'
 
 @Controller('upload')
 export class MinioController {

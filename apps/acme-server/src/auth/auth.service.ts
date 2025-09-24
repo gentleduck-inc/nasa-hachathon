@@ -36,14 +36,14 @@ export class AuthService {
         return
       }
 
-      const passwordMatch = await PasswordHasher.comparePassword(data.password, _user.password)
+      const passwordMatch = await PasswordHasher.comparePassword(data.password, _user.password_hash)
       if (!passwordMatch) {
         throwError<AuthMessageType>('AUTH_PASSWORD_INVALID')
         return
       }
 
       // omit password
-      const { password: _, ...user } = _user
+      const { password_hash: _, ...user } = _user
       return user
     } catch (error) {
       console.log(error)
@@ -52,52 +52,16 @@ export class AuthService {
     }
   }
 
-  async signup(data: SignupDto) {
-    try {
-      const password = await PasswordHasher.hashPassword(data.password)
-
-      const insertedUsers = await this.db
-        .insert(schema.userTable)
-        .values({
-          email: data.email,
-          name: data.name,
-          password,
-          userName: data.username,
-        })
-        .returning()
-
-      if (!insertedUsers?.length) {
-        throwError<AuthMessageType>('AUTH_REGISTRATION_FAILED')
-        return
-      }
-      const user = insertedUsers[0]
-      const { password: _, ...safeUser } = user
-      return safeUser
-    } catch (error) {
-      if (String((error as DrizzleError).cause).includes('user_table_user_name_unique')) {
-        throwError<AuthMessageType>('AUTH_USERNAME_ALREADY_EXISTS')
-        return
-      }
-
-      if (String((error as DrizzleError).cause).includes('user_table_email_unique')) {
-        throwError<AuthMessageType>('AUTH_EMAIL_ALREADY_EXISTS')
-        return
-      }
-
-      throwError<AuthMessageType>('AUTH_REGISTRATION_FAILED')
-    }
-  }
-
   async getAccountInformation(data: GetUserDto) {
     try {
-      const user = await this.db.query.userTable.findFirst({
+      const user = await this.db.query.users.findFirst({
         columns: {
           email: true,
+          first_name: true,
           id: true,
-          name: true,
-          userName: true,
+          last_name: true,
         },
-        where: eq(schema.userTable.id, data.user_id),
+        where: eq(schema.users.id, data.user_id),
       })
 
       if (!user) {
@@ -114,10 +78,9 @@ export class AuthService {
 
   async forgotPassword(data: ForgotPasswordDto) {
     try {
-      const user = await this.db.query.userTable.findFirst({
-        where: eq(schema.userTable.email, data.email),
+      const user = await this.db.query.users.findFirst({
+        where: eq(schema.users.email, data.email),
       })
-      console.log(user)
 
       if (!user) {
         throwError<AuthMessageType>('AUTH_USER_NOT_FOUND')
@@ -132,12 +95,12 @@ export class AuthService {
 
       const expires_at = new Date(Date.now() + 60000 * 10)
       const otp = await this.db
-        .insert(schema.otpTable)
+        .insert(schema.otpCodes)
         .values({
+          code: OTP,
           user_id: user?.id,
           ...data,
           expires_at,
-          otp: OTP,
         })
         .returning()
 
@@ -155,14 +118,14 @@ export class AuthService {
 
   async resetPassword(data: ResetPasswordDto) {
     try {
-      const password = await PasswordHasher.hashPassword(data.password)
-      data.password = password
+      const password_hash = await PasswordHasher.hashPassword(data.password_hash)
+      data.password_hash = password_hash
       console.log(data)
 
       const user = await this.db
-        .update(schema.userTable)
+        .update(schema.users)
         .set({ ...data })
-        .where(eq(schema.userTable.id, data.user_id))
+        .where(eq(schema.users.id, data.user_id))
         .returning()
 
       console.log(user)
@@ -182,9 +145,9 @@ export class AuthService {
   async updateAccountInformation({ user_id, ...data }: UpdateAccountInformationSchemaType) {
     try {
       const user = await this.db
-        .update(schema.userTable)
+        .update(schema.users)
         .set({ ...data })
-        .where(eq(schema.userTable.id, user_id))
+        .where(eq(schema.users.id, user_id))
         .returning()
 
       if (!user?.length) {
@@ -201,7 +164,7 @@ export class AuthService {
 
   async verifyCode(data: VerifyCodeDto) {
     try {
-      const otp = await this.db.delete(schema.otpTable).where(eq(schema.otpTable.user_id, data.user_id)).returning()
+      const otp = await this.db.delete(schema.otpCodes).where(eq(schema.otpCodes.user_id, data.user_id)).returning()
       console.log(otp)
 
       if (!otp?.length) {
@@ -218,7 +181,7 @@ export class AuthService {
 
   async deleteAccount(data: DeleteUserDto) {
     try {
-      const user = await this.db.delete(schema.userTable).where(eq(schema.userTable.id, data.user_id)).returning()
+      const user = await this.db.delete(schema.users).where(eq(schema.users.id, data.user_id)).returning()
       if (!user?.length) {
         throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_DELETE_ACCOUNT_FAILED')
         return

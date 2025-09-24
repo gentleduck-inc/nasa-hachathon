@@ -7,10 +7,9 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3'
 import { Inject, Injectable, Logger } from '@nestjs/common'
-import type { ConfigService } from '@nestjs/config'
+import { ConfigService } from '@nestjs/config'
 import { WINSTON_MODULE_NEST_PROVIDER, type WinstonLogger } from 'nest-winston'
 import { throwError } from '~/common/libs'
-import { LoggerService } from '~/logger'
 import type { MinioMessageType } from './minio.types'
 
 @Injectable()

@@ -10,16 +10,16 @@ import { RedisModule } from './redis'
 @Module({
   controllers: [],
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
     LoggerModule,
     DrizzleModule,
     EmailModule,
     MinioModule,
     AuthModule,
     RedisModule,
-    ConfigModule.forRoot({
-      envFilePath: '.env',
-      isGlobal: true,
-    }),
   ],
   providers: [],
 })

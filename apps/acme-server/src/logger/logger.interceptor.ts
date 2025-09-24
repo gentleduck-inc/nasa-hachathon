@@ -1,7 +1,7 @@
 import { type CallHandler, type ExecutionContext, Inject, Injectable, type NestInterceptor } from '@nestjs/common'
 import { WINSTON_MODULE_NEST_PROVIDER, type WinstonLogger } from 'nest-winston'
 import { type Observable, tap } from 'rxjs'
-import type { LoggerService } from './logger.service'
+import { LoggerService } from './logger.service'
 
 @Injectable()
 export class LoggerInterceptor implements NestInterceptor {

@@ -70,14 +70,21 @@ export function SigninPage({ className, ...props }: React.ComponentProps<'div'>)
               )}
             />
           </div>
+
           <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <FormLabel>Password</FormLabel>
-              <Link className="text-sm underline-offset-4 hover:underline" href="/auth/forgot-password">
-                Forgot your password?
-              </Link>
-            </div>
-            <PasswordInput form={form} mutation={signinMutation} />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <PasswordInput {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           <Button

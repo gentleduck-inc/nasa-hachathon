@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common'
-import { APP_INTERCEPTOR } from '@nestjs/core'
 import { WinstonModule } from 'nest-winston'
-import winston from 'winston'
+import * as winston from 'winston'
 import { LoggerInterceptor } from './logger.interceptor'
 import { LoggerService } from './logger.service'
 
@@ -9,26 +8,17 @@ import { LoggerService } from './logger.service'
   exports: [LoggerService, LoggerInterceptor],
   imports: [
     WinstonModule.forRoot({
-      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
       transports: [
-        // new winston.transports.Console({
-        //   format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-        // }),
-        new winston.transports.File({
-          filename: 'logs/combined.log',
-          format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.colorize(),
+            winston.format.simple(),
+          ),
         }),
       ],
     }),
   ],
-  providers: [
-    LoggerService,
-    LoggerInterceptor,
-
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggerInterceptor,
-    },
-  ],
+  providers: [LoggerService, LoggerInterceptor],
 })
 export class LoggerModule {}

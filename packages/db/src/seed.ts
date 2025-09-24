@@ -6,14 +6,12 @@ import {
   comments,
   missionCrew,
   missions,
-  organizations,
   processingModules,
   processingRecipes,
   products,
   searchIndex,
   settings,
   simulationRuns,
-  userRoles,
   users,
   wasteMaterials,
 } from './tables'
@@ -24,7 +22,6 @@ import type {
   NewComment,
   NewMission,
   NewMissionCrew,
-  NewOrganization,
   NewProcessingModule,
   NewProcessingRecipe,
   NewProduct,
@@ -32,7 +29,6 @@ import type {
   NewSetting,
   NewSimulationRun,
   NewUser,
-  NewUserRole,
   NewWasteMaterial,
 } from './types'
 
@@ -273,8 +269,8 @@ const simulationData: NewSimulationRun[] = [
   {
     completed_at: new Date('2025-09-18T10:00:00Z'),
     config: {
-      waste_inputs: { plastics: 20.0, metals: 15.0 },
       energy_budget: 400,
+      waste_inputs: { metals: 15.0, plastics: 20.0 },
     },
     created_by: '02222222-89ab-cdef-0123-456789abcdef',
     description: 'Weekly waste processing optimization',
@@ -378,8 +374,8 @@ const auditData: NewAuditLog[] = [
   {
     action: 'simulation_completed',
     changes: {
-      status: { from: 'running', to: 'completed' },
       results: { products_created: 12 },
+      status: { from: 'running', to: 'completed' },
     },
     entity_id: '70000000-89ab-cdef-0123-456789abcdef',
     entity_type: 'simulation_run',
@@ -392,8 +388,8 @@ const auditData: NewAuditLog[] = [
     action: 'product_created',
 
     changes: {
-      product_type: 'container',
       mass_kg: 8.0,
+      product_type: 'container',
     },
     entity_id: '80000000-89ab-cdef-0123-456789abcdef',
     entity_type: 'product',
