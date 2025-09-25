@@ -9,13 +9,13 @@ import { LoggerService } from './logger.service'
   imports: [
     WinstonModule.forRoot({
       transports: [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.colorize(),
-            winston.format.simple(),
-          ),
-        }),
+        // new winston.transports.Console({
+        //   format: winston.format.combine(
+        //     winston.format.timestamp(),
+        //     winston.format.colorize(),
+        //     winston.format.simple(),
+        //   ),
+        // }),
       ],
     }),
   ],

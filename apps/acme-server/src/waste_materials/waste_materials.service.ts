@@ -1,10 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { throwError } from '~/common/libs'
 import { DrizzleAsyncProvider, schema } from '~/drizzle'
-import type { CreateWasteMaterialDto, UpdateWasteMaterialDto } from './waste_materials.dto'
-import { WasteMessagesType } from './waste_materials.types'
+import { CreateWasteMaterialDto, UpdateWasteMaterialDto, WasteMessagesType } from './waste_materials.types'
 
 @Injectable()
 export class WasteMaterialsService {
@@ -20,13 +19,13 @@ export class WasteMaterialsService {
         .values(data as never)
         .returning()
       if (!material?.length) {
-        throwError<WasteMessagesType>('WASTE_MATERIAL_CREATION_FAILED')
+        throwError<WasteMessagesType>('WASTE_MATERIAL_CREATION_FAILED', 500)
         return
       }
       return material[0]
     } catch (error) {
       console.log(error)
-      throwError<WasteMessagesType>('WASTE_MATERIAL_CREATION_FAILED')
+      throwError<WasteMessagesType>('WASTE_MATERIAL_CREATION_FAILED', 500)
       return
     }
   }
@@ -36,7 +35,7 @@ export class WasteMaterialsService {
       return await this.db.query.wasteMaterials.findMany()
     } catch (error) {
       console.log(error)
-      throwError<WasteMessagesType>('WASTE_MATERIAL_FETCH_FAILED')
+      throwError<WasteMessagesType>('WASTE_MATERIAL_FETCH_FAILED', 500)
       return
     }
   }
@@ -47,49 +46,53 @@ export class WasteMaterialsService {
         where: eq(schema.wasteMaterials.id, id),
       })
       if (!material) {
-        throwError<WasteMessagesType>('WASTE_MATERIAL_NOT_FOUND')
+        throwError<WasteMessagesType>('WASTE_MATERIAL_NOT_FOUND', 404)
         return
       }
       return material
     } catch (error) {
       console.log(error)
-      throwError<WasteMessagesType>('WASTE_CATEGORY_FETCH_FAILED')
+      throwError<WasteMessagesType>('WASTE_CATEGORY_FETCH_FAILED', 500)
       return
     }
   }
 
-  async updateWasteMaterial(data: UpdateWasteMaterialDto) {
+  async updateWasteMaterial(data: UpdateWasteMaterialDto & { id: string }) {
     try {
       const { id, ...updateData } = data
       const material = await this.db
         .update(schema.wasteMaterials)
-        .set({ ...updateData, updated_at: new Date() } as never)
+        .set({
+          ...updateData,
+          updated_at: new Date(),
+          version: sql`${schema.wasteMaterials.version} + 1`,
+        } as never)
         .where(eq(schema.wasteMaterials.id, id))
         .returning()
 
       if (!material?.length) {
-        throwError<WasteMessagesType>('WASTE_MATERIAL_UPDATE_FAILED')
+        throwError<WasteMessagesType>('WASTE_MATERIAL_UPDATE_FAILED', 500)
         return
       }
       return material[0]
     } catch (error) {
       console.log(error)
-      throwError<WasteMessagesType>('WASTE_MATERIAL_UPDATE_FAILED')
+      throwError<WasteMessagesType>('WASTE_MATERIAL_UPDATE_FAILED', 500)
       return
     }
   }
 
   async deleteWasteMaterial(id: string) {
     try {
-      const material = await this.db.delete(schema.wasteMaterials).where(eq(schema.wasteMaterials.id, id)).returning()
-      if (!material?.length) {
-        throwError<'WASTE_DELETE_FAILED'>('WASTE_DELETE_FAILED')
+      const [material] = await this.db.delete(schema.wasteMaterials).where(eq(schema.wasteMaterials.id, id)).returning()
+      if (!material) {
+        throwError<'WASTE_DELETE_FAILED'>('WASTE_DELETE_FAILED', 500)
         return
       }
-      return null
+      return { id: material.id }
     } catch (error) {
       console.log(error)
-      throwError<WasteMessagesType>('WASTE_MATERIAL_DELETE_FAILED')
+      throwError<WasteMessagesType>('WASTE_MATERIAL_DELETE_FAILED', 500)
       return
     }
   }

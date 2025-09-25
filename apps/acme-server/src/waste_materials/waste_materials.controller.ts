@@ -1,14 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseFilters } from '@nestjs/common'
-import { ZodValidationPipe } from '~/common/pipes'
 import { ErrorExceptionFilter } from '~/common/exceptions'
-import { WasteMaterialsService } from './waste_materials.service'
-import {
-  createWasteMaterialSchema,
-  updateWasteMaterialSchema,
-  type CreateWasteMaterialDto,
-  type UpdateWasteMaterialDto,
-} from './waste_materials.dto'
+import { ZodValidationPipe } from '~/common/pipes'
 import type { ResponseType } from '~/common/types'
+import { createWasteMaterialSchema, updateWasteMaterialSchema } from './waste_materials.dto'
+import { WasteMaterialsService } from './waste_materials.service'
+import { CreateWasteMaterialDto, UpdateWasteMaterialDto } from './waste_materials.types'
 
 @Controller('waste_materials')
 @UseFilters(ErrorExceptionFilter)
@@ -35,9 +31,12 @@ export class WasteMaterialsController {
     return { data, message: 'WASTE_GET_BY_ID_SUCCESS', state: 'success' }
   }
 
-  @Patch('/')
-  async updateWasteMaterial(@Body(new ZodValidationPipe(updateWasteMaterialSchema)) body: UpdateWasteMaterialDto) {
-    const data = await this.wasteMaterialsService.updateWasteMaterial(body)
+  @Patch(':id')
+  async updateWasteMaterial(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateWasteMaterialSchema)) body: UpdateWasteMaterialDto,
+  ) {
+    const data = await this.wasteMaterialsService.updateWasteMaterial({ ...body, id })
     return { data, message: 'WASTE_UPDATE_SUCCESS', state: 'success' }
   }
 

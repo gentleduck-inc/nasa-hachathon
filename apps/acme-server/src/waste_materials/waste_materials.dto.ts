@@ -1,23 +1,16 @@
+import { WASTE_ENUM } from '@acme/acme-db/constants'
 import { z } from 'zod'
+import { WasteMessagesType } from './waste_materials.types'
 
-// Enums must match your `wasteTypeEnum`
+const errorMessage = <T extends WasteMessagesType>(message: T) => ({ message })
+
 export const createWasteMaterialSchema = z.object({
-  category: z.string(),
-  composition: z.record(z.any()).optional(),
-  created_by: z.string().uuid(),
-  density_kg_per_m3: z.number().optional(),
-  description: z.string().optional(),
-  is_public: z.boolean().optional(),
-  name: z.string().max(100),
-  processing_difficulty: z.number().min(1).max(5).optional(),
-  properties: z.record(z.any()).optional(),
-  recyclability_score: z.number().min(0).max(1).optional(),
+  category: z.enum(WASTE_ENUM, { ...errorMessage('ZOD_EXPECTED_STRING') }),
+  composition: z.record(z.any({ ...errorMessage('ZOD_EXPECTED_OBJECT') })).optional(),
+  density_kg_per_m3: z.number({ ...errorMessage('ZOD_EXPECTED_NUMBER') }).optional(),
+  description: z.string({ ...errorMessage('ZOD_EXPECTED_STRING') }).optional(),
+  name: z.string({ ...errorMessage('ZOD_EXPECTED_STRING') }).max(100, { ...errorMessage('ZOD_TOO_LONG') }),
+  properties: z.record(z.any({ ...errorMessage('ZOD_EXPECTED_OBJECT') })).optional(),
 })
 
-export type CreateWasteMaterialDto = z.infer<typeof createWasteMaterialSchema>
-
-export const updateWasteMaterialSchema = createWasteMaterialSchema.partial().extend({
-  id: z.string().uuid(),
-})
-
-export type UpdateWasteMaterialDto = z.infer<typeof updateWasteMaterialSchema>
+export const updateWasteMaterialSchema = createWasteMaterialSchema.partial()
