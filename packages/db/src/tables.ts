@@ -16,23 +16,12 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
+import { WASTE_ENUM } from './constants'
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['admin', 'mission_commander', 'crew_member', 'engineer', 'scientist'])
 export const missionStatusEnum = pgEnum('mission_status', ['planning', 'active', 'completed', 'aborted'])
-export const wasteTypeEnum = pgEnum('waste_type', [
-  'plastics',
-  'metals',
-  'foam',
-  'textiles',
-  'composites',
-  'eva_waste',
-  'food_packaging',
-  'structural_elements',
-  'bubble_wrap',
-  'nitrile_gloves',
-  'other',
-])
+export const wasteTypeEnum = pgEnum('waste_type', WASTE_ENUM)
 export const moduleStatusEnum = pgEnum('module_status', ['active', 'maintenance', 'broken', 'offline'])
 export const runStatusEnum = pgEnum('run_status', ['queued', 'running', 'completed', 'failed', 'cancelled'])
 export const productTypeEnum = pgEnum('product_type', [
@@ -193,14 +182,10 @@ export const wasteMaterials = pgTable(
     category: wasteTypeEnum('category').notNull(),
     composition: jsonb('composition').default(sql`'{}'::jsonb`),
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    created_by: uuid('created_by')
-      .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
     deleted_at: timestamp('deleted_at', { withTimezone: true }),
     density_kg_per_m3: decimal('density_kg_per_m3', { precision: 8, scale: 2 }),
     description: text('description'),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    is_public: boolean('is_public').default(true).notNull(),
     name: varchar('name', { length: 100 }).notNull(),
     processing_difficulty: smallint('processing_difficulty').default(1),
     properties: jsonb('properties').default(sql`'{}'::jsonb`),
@@ -211,8 +196,6 @@ export const wasteMaterials = pgTable(
   (table) => [
     index('materials_category_idx').on(table.category, table.recyclability_score),
     index('materials_name_idx').on(table.name),
-    index('materials_public_idx').on(table.is_public, table.category),
-    index('created_by_materials_idx').on(table.created_by, table.category),
   ],
 )
 

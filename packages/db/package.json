@@ -18,6 +18,7 @@
   },
   "exports": {
     ".": "./src/db.ts",
+    "./constants": "./src/constants.ts",
     "./relations": "./src/relations.ts",
     "./tables": "./src/tables.ts",
     "./types": "./src/types.ts"

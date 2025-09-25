@@ -10,7 +10,6 @@ import {
   processingRecipes,
   products,
   recyclingScenarios,
-  searchIndex,
   settings,
   simulationRuns,
   users,
@@ -68,16 +67,6 @@ export const missionCrewRelations = relations(missionCrew, ({ one }) => ({
   }),
   user: one(users, {
     fields: [missionCrew.user_id],
-    references: [users.id],
-  }),
-}))
-
-/**
- * Waste materials relations
- */
-export const wasteMaterialRelations = relations(wasteMaterials, ({ one }) => ({
-  createdBy: one(users, {
-    fields: [wasteMaterials.created_by],
     references: [users.id],
   }),
 }))

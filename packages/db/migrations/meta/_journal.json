@@ -15,6 +15,20 @@
       "when": 1758737510698,
       "tag": "0001_slimy_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758823018578,
+      "tag": "0002_good_quasar",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758823254807,
+      "tag": "0003_happy_charles_xavier",
+      "breakpoints": true
     }
   ]
 }
