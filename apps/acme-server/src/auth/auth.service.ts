@@ -32,13 +32,13 @@ export class AuthService {
       })
 
       if (!_user) {
-        throwError<AuthMessageType>('AUTH_USERNAME_INVALID')
+        throwError<AuthMessageType>('AUTH_USERNAME_INVALID', 401)
         return
       }
 
       const passwordMatch = await PasswordHasher.comparePassword(data.password, _user.password_hash)
       if (!passwordMatch) {
-        throwError<AuthMessageType>('AUTH_PASSWORD_INVALID')
+        throwError<AuthMessageType>('AUTH_PASSWORD_INVALID', 401)
         return
       }
 
@@ -47,7 +47,7 @@ export class AuthService {
       return user
     } catch (error) {
       console.log(error)
-      throwError<AuthMessageType>('AUTH_SIGNIN_FAILED')
+      throwError<AuthMessageType>('AUTH_SIGNIN_FAILED', 500)
       return
     }
   }
@@ -59,16 +59,16 @@ export class AuthService {
       const insertedUsers = await this.db
         .insert(schema.users)
         .values({
-          password_hash,
           email: data.email,
           first_name: data.firstName,
           last_name: data.lastName,
+          password_hash,
           username: data.username,
         })
         .returning()
 
       if (!insertedUsers?.length) {
-        throwError<AuthMessageType>('AUTH_REGISTRATION_FAILED')
+        throwError<AuthMessageType>('AUTH_REGISTRATION_FAILED', 500)
         return
       }
       const user = insertedUsers[0]
@@ -76,16 +76,16 @@ export class AuthService {
       return safeUser
     } catch (error) {
       if (String((error as DrizzleError).cause).includes('user_table_user_name_unique')) {
-        throwError<AuthMessageType>('AUTH_USERNAME_ALREADY_EXISTS')
+        throwError<AuthMessageType>('AUTH_USERNAME_ALREADY_EXISTS', 409)
         return
       }
 
       if (String((error as DrizzleError).cause).includes('user_table_email_unique')) {
-        throwError<AuthMessageType>('AUTH_EMAIL_ALREADY_EXISTS')
+        throwError<AuthMessageType>('AUTH_EMAIL_ALREADY_EXISTS', 409)
         return
       }
 
-      throwError<AuthMessageType>('AUTH_REGISTRATION_FAILED')
+      throwError<AuthMessageType>('AUTH_REGISTRATION_FAILED', 500)
     }
   }
 
@@ -93,26 +93,26 @@ export class AuthService {
     try {
       const user = await this.db.query.users.findFirst({
         columns: {
+          avatar_url: true,
           email: true,
           first_name: true,
           id: true,
           last_name: true,
-          avatar_url: true,
-          settings: true,
           role: true,
+          settings: true,
           username: true,
         },
         where: eq(schema.users.id, data.user_id),
       })
 
       if (!user) {
-        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_UNAUTHORIZED')
+        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_UNAUTHORIZED', 401)
         return
       }
       return user
     } catch (error) {
       console.log(error)
-      throwError<AuthMessageType>('AUTH_GET_ACCOUNT_INFORMATION_FAILED')
+      throwError<AuthMessageType>('AUTH_GET_ACCOUNT_INFORMATION_FAILED', 500)
       return
     }
   }
@@ -124,7 +124,7 @@ export class AuthService {
       })
 
       if (!user) {
-        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND')
+        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND', 404)
         return
       }
 
@@ -146,13 +146,13 @@ export class AuthService {
         .returning()
 
       if (!otp?.length) {
-        throwError<AuthMessageType>('AUTH_FORGOT_PASSWORD_FAILED')
+        throwError<AuthMessageType>('AUTH_FORGOT_PASSWORD_FAILED', 500)
         return
       }
       return { otp, user }
     } catch (error) {
       console.log(error)
-      throwError<AuthMessageType>('AUTH_FORGOT_PASSWORD_FAILED')
+      throwError<AuthMessageType>('AUTH_FORGOT_PASSWORD_FAILED', 500)
       return
     }
   }
@@ -172,13 +172,13 @@ export class AuthService {
       console.log(user)
 
       if (!user?.length) {
-        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_RESET_PASSWORD_FAILED')
+        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_RESET_PASSWORD_FAILED', 500)
         return
       }
       return user
     } catch (error) {
       console.log(error)
-      throwError<AuthMessageType>('AUTH_RESET_PASSWORD_FAILED')
+      throwError<AuthMessageType>('AUTH_RESET_PASSWORD_FAILED', 500)
       return
     }
   }
@@ -192,13 +192,13 @@ export class AuthService {
         .returning()
 
       if (!user?.length) {
-        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_UPDATE_ACCOUNT_INFORMATION_FAILED')
+        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_UPDATE_ACCOUNT_INFORMATION_FAILED', 500)
         return
       }
       return user
     } catch (error) {
       console.log(error)
-      throwError<AuthMessageType>('AUTH_UPDATE_ACCOUNT_INFORMATION_FAILED')
+      throwError<AuthMessageType>('AUTH_UPDATE_ACCOUNT_INFORMATION_FAILED', 500)
       return
     }
   }
@@ -209,13 +209,13 @@ export class AuthService {
       console.log(otp)
 
       if (!otp?.length) {
-        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_VERIFY_CODE_FAILED')
+        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_VERIFY_CODE_FAILED', 500)
         return
       }
       return null
     } catch (error) {
       console.log(error)
-      throwError<AuthMessageType>('AUTH_VERIFY_CODE_FAILED')
+      throwError<AuthMessageType>('AUTH_VERIFY_CODE_FAILED', 500)
       return
     }
   }
@@ -224,13 +224,13 @@ export class AuthService {
     try {
       const user = await this.db.delete(schema.users).where(eq(schema.users.id, data.user_id)).returning()
       if (!user?.length) {
-        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_DELETE_ACCOUNT_FAILED')
+        throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_DELETE_ACCOUNT_FAILED', 500)
         return
       }
       return null
     } catch (error) {
       console.log(error)
-      throwError<AuthMessageType>('AUTH_DELETE_ACCOUNT_FAILED')
+      throwError<AuthMessageType>('AUTH_DELETE_ACCOUNT_FAILED', 500)
       return
     }
   }

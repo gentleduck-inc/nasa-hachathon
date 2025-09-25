@@ -83,6 +83,9 @@
     "typescript": "^5.8.3",
     "vitest": "catalog:"
   },
+  "exports": {
+    "./*": "./src/*/*.dto.ts"
+  },
   "license": "UNLICENSED",
   "name": "@acme/acme-server",
   "node": ">=22.0.0",

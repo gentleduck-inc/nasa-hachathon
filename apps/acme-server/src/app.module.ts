@@ -6,6 +6,7 @@ import { EmailModule } from './email'
 import { LoggerModule } from './logger'
 import { MinioModule } from './minio'
 import { RedisModule } from './redis'
+import { WasteMaterialsModule } from './waste_materials'
 
 @Module({
   controllers: [],
@@ -16,10 +17,11 @@ import { RedisModule } from './redis'
     }),
     LoggerModule,
     DrizzleModule,
-    EmailModule,
-    MinioModule,
-    AuthModule,
     RedisModule,
+    MinioModule,
+    EmailModule,
+    AuthModule,
+    WasteMaterialsModule,
   ],
   providers: [],
 })

@@ -1,5 +1,6 @@
 'use client'
 
+import { User } from '@acme/acme-db/types'
 import { Avatar } from '@acme/ui/avatar'
 import {
   DropdownMenu,
@@ -11,32 +12,29 @@ import {
   DropdownMenuTrigger,
 } from '@acme/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@acme/ui/sidebar'
+import { Skeleton } from '@acme/ui/skeleton'
 import { IconCreditCard, IconDotsVertical, IconNotification, IconUserCircle } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
-import { Signout } from '../auth/signout'
 import axios from 'axios'
-import { User } from '@acme/db/types'
+import { useRouter } from 'next/navigation'
+import { Signout } from '../auth/signout'
 
 export function NavUser() {
   const { isMobile } = useSidebar()
+  const router = useRouter()
 
   const { data: user, isLoading } = useQuery({
     queryFn: async () => {
-      const { data } = await axios.get(process.env.NEXT_PUBLIC_API_URL + '/v1/auth/me', {
-        withCredentials: true,
-      })
-      return data.data as User
+      try {
+        const { data } = await axios.get(process.env.NEXT_PUBLIC_API_URL + '/v1/auth/me', {
+          withCredentials: true,
+        })
+        return data.data as User
+      } catch (error) {}
     },
     queryKey: ['session'],
     retry: false,
   })
-  // console.log(data, isLoading)
-
-  // const user = {
-  //   avatar: 'https://avatars.githubusercontent.com/u/108896341',
-  //   email: 'wildduck@iusevimbtw.com',
-  //   name: 'Wildduck',
-  // }
 
   return (
     <SidebarMenu>
@@ -46,17 +44,23 @@ export function NavUser() {
             <SidebarMenuButton
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               size="lg">
-              <Avatar
-                alt={user?.username}
-                className="h-8 w-8 rounded-lg"
-                fallback={user?.username}
-                src={user?.avatar_url as string}
-              />
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user?.username}</span>
-                <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
-              </div>
-              <IconDotsVertical className="ml-auto size-4" />
+              {isLoading ? (
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              ) : (
+                <>
+                  <Avatar
+                    alt={user?.username}
+                    className="h-8 w-8 rounded-lg"
+                    fallback={user?.username}
+                    src={user?.avatar_url as string}
+                  />
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">{user?.username}</span>
+                    <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
+                  </div>
+                  <IconDotsVertical className="ml-auto size-4" />
+                </>
+              )}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg">

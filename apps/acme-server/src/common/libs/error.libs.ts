@@ -1,8 +1,8 @@
 import { WsException } from '@nestjs/websockets'
 
-export function throwError<T extends string>(string: T, cause?: string): Error {
+export function throwError<T extends string>(string: T, status: number): Error {
   throw new Error(string, {
-    cause,
+    cause: status,
   })
 }
 

@@ -1,4 +1,4 @@
-import { schema } from '@acme/db'
+import { schema } from '@acme/acme-db'
 import { ConfigService } from '@nestjs/config'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'

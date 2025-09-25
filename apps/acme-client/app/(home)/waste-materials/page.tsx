@@ -1,7 +1,5 @@
+import { WasteMaterials } from '~/components/waste-materials'
+
 export default function Page() {
-  return (
-    <div>
-      <h1>Waste Materials</h1>
-    </div>
-  )
+  return <WasteMaterials />
 }

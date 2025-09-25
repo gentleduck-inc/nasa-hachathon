@@ -23,11 +23,11 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
   const form = useForm<SignupSchemaType>({
     defaultValues: {
       email: '',
-      username: '',
+      firstName: '',
+      lastName: '',
       password: '',
       passwordConfirm: '',
-      lastName: '',
-      firstName: '',
+      username: '',
     },
     mode: 'onChange',
     resolver: zodResolver(signupSchemaClient),

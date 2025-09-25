@@ -34,7 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   width={200}
                 />
               </div>
-              <code className="font-bold font-mono">@Re-Cycle</code>
+              <code className="font-bold font-mono">@Acme</code>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>

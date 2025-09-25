@@ -1,10 +1,10 @@
 'use client'
 
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@acme/ui/sidebar'
+import { cn } from '@gentleduck/libs/cn'
 import { type Icon } from '@tabler/icons-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@gentleduck/libs/cn'
 
 export function NavMain({
   items,
@@ -22,9 +22,9 @@ export function NavMain({
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           {items.map((item) => (
-            <SidebarMenuItem key={item.title} className={cn(pathname === item.url && 'bg-zinc-800/10 rounded-sm')}>
+            <SidebarMenuItem className={cn(pathname === item.url && 'rounded-sm bg-zinc-800/10')} key={item.title}>
               <Link href={item.url} key={item.title}>
-                <SidebarMenuButton tooltip={item.title} className="cursor-pointer">
+                <SidebarMenuButton className="cursor-pointer" tooltip={item.title}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                 </SidebarMenuButton>

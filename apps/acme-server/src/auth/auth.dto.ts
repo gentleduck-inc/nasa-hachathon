@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { AuthMessageType } from './auth.types'
+
 const errorMessage = <T extends AuthMessageType>(message: T) => ({ message })
 
 const string = z.string({ ...errorMessage('ZOD_EXPECTED_STRING') }).max(30, { ...errorMessage('ZOD_TOO_LONG') })

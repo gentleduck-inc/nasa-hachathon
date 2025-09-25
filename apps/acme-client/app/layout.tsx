@@ -4,7 +4,7 @@ import './globals.css'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Toaster } from 'sonner'
-import { ReactQueryProvider } from '~/providers/react-query'
+import { ReactQueryProvider, ThemeProvider } from '~/providers/react-query'
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -36,9 +36,15 @@ export default function RootLayout({
         <link crossOrigin="anonymous" href="https://fonts.gstatic.com" rel="preconnect" />
         <link href="https://fonts.googleapis.com/css2?family=Fustat:wght@200..800&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} bg-slate-50 antialiased`}>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
-        <Toaster />
+      <body className={`${geistSans.variable} ${geistMono.variable} bg-slate-50 antialiased min-h-svh`}>
+        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange enableColorScheme enableSystem>
+          <ReactQueryProvider>
+            <div vaul-drawer-wrapper="">
+              <div className="relative flex min-h-svh flex-col bg-background">{children}</div>
+            </div>
+          </ReactQueryProvider>
+        </ThemeProvider>
+        <Toaster position="top-center" />
       </body>
     </html>
   )

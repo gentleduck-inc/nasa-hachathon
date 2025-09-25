@@ -8,9 +8,8 @@ import type { AuthMessageType } from './auth.types'
 export class AuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     if (context.switchToHttp().getRequest<Request>().session.user) return true
-    console.log(context.switchToHttp().getRequest<Request>().session)
 
-    throwError<AuthMessageType>('AUTH_UNAUTHORIZED')
+    throwError<AuthMessageType>('AUTH_UNAUTHORIZED', 401)
     return false
   }
 }

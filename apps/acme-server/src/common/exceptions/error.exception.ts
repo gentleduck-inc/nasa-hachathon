@@ -22,7 +22,6 @@ export class ErrorExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse<Response>()
     const request = ctx.getRequest<Request>()
-    const status = 500
 
     const logPayload = {
       headers: request.headers,
@@ -37,9 +36,9 @@ export class ErrorExceptionFilter implements ExceptionFilter {
       url: request.url,
     }
 
-    this.logger.error(logPayload)
+    // this.logger.error(logPayload)
 
-    response.status(status).json({
+    response.status(exception.cause as number).json({
       message: exception.message,
       state: 'error',
     })
