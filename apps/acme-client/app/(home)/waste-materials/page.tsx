@@ -1,5 +1,5 @@
-import { WasteMaterials } from '~/components/waste-materials'
+import { WasteInventory } from '~/components/waste-inventory'
 
 export default function Page() {
-  return <WasteMaterials />
+  return <WasteInventory />
 }

@@ -62,7 +62,10 @@ export class ProcessingRunsRepository {
   }
 
   async insertRun(values: any) {
-    const [row] = await this.db.insert(schema.processingRuns).values(values as any).returning()
+    const [row] = await this.db
+      .insert(schema.processingRuns)
+      .values(values as any)
+      .returning()
     return row
   }
 
@@ -71,7 +74,13 @@ export class ProcessingRunsRepository {
   }
 
   async listRuns(where: any, limit: number, offset: number) {
-    return this.db.select().from(schema.processingRuns).where(where).orderBy(desc(schema.processingRuns.created_at)).limit(limit).offset(offset)
+    return this.db
+      .select()
+      .from(schema.processingRuns)
+      .where(where)
+      .orderBy(desc(schema.processingRuns.created_at))
+      .limit(limit)
+      .offset(offset)
   }
 
   async countRuns(where: any) {

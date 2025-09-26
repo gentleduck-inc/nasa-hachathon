@@ -4,7 +4,7 @@ import { ProductInventoryService } from './product_inventory.service'
 
 @Module({
   controllers: [ProductInventoryController],
-  providers: [ProductInventoryService],
   exports: [ProductInventoryService],
+  providers: [ProductInventoryService],
 })
 export class ProductInventoryModule {}

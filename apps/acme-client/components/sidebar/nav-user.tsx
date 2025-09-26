@@ -18,6 +18,7 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { Signout } from '../auth/signout'
+import { server_api } from '~/libs/axios'
 
 export function NavUser() {
   const { isMobile } = useSidebar()
@@ -25,12 +26,10 @@ export function NavUser() {
 
   const { data: user, isLoading } = useQuery({
     queryFn: async () => {
-      try {
-        const { data } = await axios.get(process.env.NEXT_PUBLIC_API_URL + '/v1/auth/me', {
-          withCredentials: true,
-        })
-        return data.data as User
-      } catch (error) {}
+      const { data } = await server_api.get(process.env.NEXT_PUBLIC_API_URL + '/v1/auth/me', {
+        withCredentials: true,
+      })
+      return data.data as User
     },
     queryKey: ['session'],
     retry: false,

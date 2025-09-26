@@ -1,10 +1,10 @@
 import { Logger, UseGuards } from '@nestjs/common'
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { SOCKET_NAMESPACE, SocketEvents } from './socket.constants'
 import { AuthGuard } from '~/auth/auth.guard'
+import { SOCKET_NAMESPACE, SocketEvents } from './socket.constants'
 
-@WebSocketGateway({ namespace: SOCKET_NAMESPACE, cors: { origin: true, credentials: true } })
+@WebSocketGateway({ cors: { credentials: true, origin: true }, namespace: SOCKET_NAMESPACE })
 @UseGuards(AuthGuard)
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

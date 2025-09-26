@@ -5,9 +5,9 @@ import { ProcessingRunsRepository } from './processing_runs.repository'
 import { ProcessingRunsService } from './processing_runs.service'
 
 @Module({
-  imports: [QueueModule],
   controllers: [ProcessingRunsController],
-  providers: [ProcessingRunsService, ProcessingRunsRepository],
   exports: [ProcessingRunsService, ProcessingRunsRepository],
+  imports: [QueueModule],
+  providers: [ProcessingRunsService, ProcessingRunsRepository],
 })
 export class ProcessingRunsModule {}

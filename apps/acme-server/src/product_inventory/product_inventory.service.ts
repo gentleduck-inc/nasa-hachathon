@@ -50,15 +50,15 @@ export class ProductInventoryService {
       const [row] = await this.db
         .insert(schema.productInventory)
         .values({
+          is_available: true,
+          location: data.location,
           product_type: data.product_type as any,
+          production_run_id: data.production_run_id ?? null,
+          properties: data.properties ?? {},
+          quality_score: data.quality_score ?? 1,
           quantity: data.quantity,
           total_mass_kg: String(data.total_mass_kg),
           unit_mass_kg: data.unit_mass_kg != null ? String(data.unit_mass_kg) : null,
-          location: data.location,
-          properties: data.properties ?? {},
-          production_run_id: data.production_run_id ?? null,
-          quality_score: data.quality_score ?? 1,
-          is_available: true,
         } as any)
         .returning()
 
@@ -84,7 +84,11 @@ export class ProductInventoryService {
       }
       const [row] = await this.db
         .update(schema.productInventory)
-        .set({ reserved_quantity: (current.reserved_quantity ?? 0) + quantity, is_available: true, updated_at: new Date() })
+        .set({
+          is_available: true,
+          reserved_quantity: (current.reserved_quantity ?? 0) + quantity,
+          updated_at: new Date(),
+        })
         .where(eq(schema.productInventory.id, id))
         .returning()
       return row
@@ -112,7 +116,7 @@ export class ProductInventoryService {
       const newRes = Math.max(0, reserved - quantity)
       const [row] = await this.db
         .update(schema.productInventory)
-        .set({ quantity: newQty, reserved_quantity: newRes, is_available: newQty > 0, updated_at: new Date() })
+        .set({ is_available: newQty > 0, quantity: newQty, reserved_quantity: newRes, updated_at: new Date() })
         .where(eq(schema.productInventory.id, id))
         .returning()
       return row

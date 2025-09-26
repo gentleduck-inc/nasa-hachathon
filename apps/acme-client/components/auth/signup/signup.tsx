@@ -40,7 +40,7 @@ export function SignupPage({ className, ...props }: React.ComponentProps<'div'>)
         userAtomSetter(data.data)
         localStorage.setItem('user', JSON.stringify(data.data))
         toast.success('Signed up successfully')
-        router.push('/')
+        router.push('/auth/signin')
       }
     },
   })

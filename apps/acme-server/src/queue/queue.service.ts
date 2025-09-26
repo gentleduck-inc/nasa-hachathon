@@ -22,10 +22,10 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
     const connection = {
       connection: {
-        host: this.config.get<string>('REDIS_HOST') || '127.0.0.1',
-        port: Number(this.config.get<string>('REDIS_PORT') || 6379),
-        password: this.config.get<string>('REDIS_PASSWORD') || undefined,
         db: Number(this.config.get<string>('REDIS_DB') || 0),
+        host: this.config.get<string>('REDIS_HOST') || '127.0.0.1',
+        password: this.config.get<string>('REDIS_PASSWORD') || undefined,
+        port: Number(this.config.get<string>('REDIS_PORT') || 6379),
       },
     }
 

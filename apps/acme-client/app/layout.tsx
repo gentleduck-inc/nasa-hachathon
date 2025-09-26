@@ -21,14 +21,11 @@ export const metadata: Metadata = {
   title: 'acme',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const cookie = cookies().then((res) => res.get('connect.sid'))
-  if (!cookie) redirect('/login')
-
   return (
     <html lang="en">
       <head>

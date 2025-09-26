@@ -105,14 +105,18 @@ export class AuthController {
     })
 
     if (!user) {
-      console.log('hay')
       return new Promise((resolve, reject) => {
         req.session.destroy((err) => {
           if (err) {
             console.error('Session destruction error:', err)
             reject({ message: 'Could not destroy session', state: 'error' })
           } else {
-            res.clearCookie('connect.sid')
+            res.clearCookie('connect.sid', {
+              httpOnly: true,
+              path: '/',
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+            })
             resolve({ message: 'AUTH_GET_ACCOUNT_INFORMATION_FAILED', state: 'error' })
           }
         })

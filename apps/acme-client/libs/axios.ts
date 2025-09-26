@@ -19,7 +19,8 @@ server_api.interceptors.response.use(
 
       // Handle unauthorized (e.g., redirect to login)
       // TEST: this case should throw in the client
-      router.push('/auth/signin')
+      // router.push('/auth/signin')
+      location.href = '/auth/signin'
       localStorage.removeItem('user')
     }
     return Promise.reject(error)

@@ -3,8 +3,8 @@ import { ConfigModule } from '@nestjs/config'
 import { QueueService } from './queue.service'
 
 @Module({
+  exports: [QueueService],
   imports: [ConfigModule],
   providers: [QueueService],
-  exports: [QueueService],
 })
 export class QueueModule {}

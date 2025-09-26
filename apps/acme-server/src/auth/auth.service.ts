@@ -46,7 +46,6 @@ export class AuthService {
       const { password_hash: _, ...user } = _user
       return user
     } catch (error) {
-      console.log(error)
       throwError<AuthMessageType>('AUTH_SIGNIN_FAILED', 500)
       return
     }
@@ -98,7 +97,6 @@ export class AuthService {
           first_name: true,
           id: true,
           last_name: true,
-          role: true,
           settings: true,
           username: true,
         },
@@ -111,8 +109,7 @@ export class AuthService {
       }
       return user
     } catch (error) {
-      console.log(error)
-      throwError<AuthMessageType>('AUTH_GET_ACCOUNT_INFORMATION_FAILED', 500)
+      throwError<AuthMessageType>('AUTH_GET_ACCOUNT_INFORMATION_FAILED', 401)
       return
     }
   }
@@ -151,7 +148,6 @@ export class AuthService {
       }
       return { otp, user }
     } catch (error) {
-      console.log(error)
       throwError<AuthMessageType>('AUTH_FORGOT_PASSWORD_FAILED', 500)
       return
     }
@@ -161,7 +157,6 @@ export class AuthService {
     try {
       const password_hash = await PasswordHasher.hashPassword(data.password_hash)
       data.password_hash = password_hash
-      console.log(data)
 
       const user = await this.db
         .update(schema.users)
@@ -169,15 +164,12 @@ export class AuthService {
         .where(eq(schema.users.id, data.user_id))
         .returning()
 
-      console.log(user)
-
       if (!user?.length) {
         throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_RESET_PASSWORD_FAILED', 500)
         return
       }
       return user
     } catch (error) {
-      console.log(error)
       throwError<AuthMessageType>('AUTH_RESET_PASSWORD_FAILED', 500)
       return
     }
@@ -197,7 +189,6 @@ export class AuthService {
       }
       return user
     } catch (error) {
-      console.log(error)
       throwError<AuthMessageType>('AUTH_UPDATE_ACCOUNT_INFORMATION_FAILED', 500)
       return
     }
@@ -206,7 +197,6 @@ export class AuthService {
   async verifyCode(data: VerifyCodeDto) {
     try {
       const otp = await this.db.delete(schema.otpCodes).where(eq(schema.otpCodes.user_id, data.user_id)).returning()
-      console.log(otp)
 
       if (!otp?.length) {
         throwError<AuthMessageType>('AUTH_USER_NOT_FOUND_OR_VERIFY_CODE_FAILED', 500)
@@ -214,7 +204,6 @@ export class AuthService {
       }
       return null
     } catch (error) {
-      console.log(error)
       throwError<AuthMessageType>('AUTH_VERIFY_CODE_FAILED', 500)
       return
     }
@@ -229,7 +218,6 @@ export class AuthService {
       }
       return null
     } catch (error) {
-      console.log(error)
       throwError<AuthMessageType>('AUTH_DELETE_ACCOUNT_FAILED', 500)
       return
     }

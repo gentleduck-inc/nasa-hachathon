@@ -98,12 +98,15 @@ export class ProcessingRunsService {
       }
       // enqueue job for processing
       try {
-        await this.queue.addProcessRun({
-          runId: row.id,
-          recipeId: row.recipe_id,
-          moduleId: row.module_id || undefined,
-          input: row.input_quantities as any,
-        }, { jobId: row.id, attempts: 3, backoff: { type: 'exponential', delay: 5000 } })
+        await this.queue.addProcessRun(
+          {
+            input: row.input_quantities as any,
+            moduleId: row.module_id || undefined,
+            recipeId: row.recipe_id,
+            runId: row.id,
+          },
+          { attempts: 3, backoff: { delay: 5000, type: 'exponential' }, jobId: row.id },
+        )
       } catch (e) {
         // do not fail the API if queueing fails; logs are sufficient
         console.log('Queue enqueue failed', e)
