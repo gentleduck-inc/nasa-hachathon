@@ -14,10 +14,10 @@ async function main() {
 
   const connection = {
     connection: {
-      host: cfg.get<string>('REDIS_HOST') || '127.0.0.1',
-      port: Number(cfg.get<string>('REDIS_PORT') || 6379),
-      password: cfg.get<string>('REDIS_PASSWORD') || undefined,
       db: Number(cfg.get<string>('REDIS_DB') || 0),
+      host: cfg.get<string>('REDIS_HOST') || '127.0.0.1',
+      password: cfg.get<string>('REDIS_PASSWORD') || undefined,
+      port: Number(cfg.get<string>('REDIS_PORT') || 6379),
     },
   }
   const concurrency = Number(cfg.get<string>('QUEUE_CONCURRENCY') || 4)

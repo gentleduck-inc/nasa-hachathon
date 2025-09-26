@@ -1,7 +1,7 @@
-import { Pool } from 'pg'
-import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { schema } from '@acme/acme-db'
 import { and, asc, desc, eq, sql } from 'drizzle-orm'
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
+import { Pool } from 'pg'
 
 export interface RunJobData {
   runId: string
@@ -33,7 +33,7 @@ export class RunHandler {
   private async markRunning(runId: string) {
     await this.db
       .update(schema.processingRuns)
-      .set({ status: 'running', started_at: new Date(), updated_at: new Date() } as any)
+      .set({ started_at: new Date(), status: 'running', updated_at: new Date() } as any)
       .where(eq(schema.processingRuns.id, runId))
   }
 
@@ -51,22 +51,22 @@ export class RunHandler {
       const outputs = run.estimated_outputs as Record<string, number>
       for (const [product_type, qty] of Object.entries(outputs)) {
         await this.db.insert(schema.productInventory).values({
+          is_available: true,
+          location: 'storage:default',
           product_type: product_type as any,
+          production_run_id: runId,
+          properties: {},
+          quality_score: 1,
           quantity: Math.round(qty),
           total_mass_kg: String(qty),
           unit_mass_kg: null,
-          location: 'storage:default',
-          properties: {},
-          production_run_id: runId,
-          is_available: true,
-          quality_score: 1,
         } as any)
       }
     }
 
     await this.db
       .update(schema.processingRuns)
-      .set({ status: 'completed', completed_at: new Date(), updated_at: new Date() } as any)
+      .set({ completed_at: new Date(), status: 'completed', updated_at: new Date() } as any)
       .where(eq(schema.processingRuns.id, runId))
   }
 }

@@ -3,8 +3,8 @@ import { AuthModule } from '~/auth'
 import { SocketGateway } from './socket.gateway'
 
 @Module({
+  exports: [SocketGateway],
   imports: [AuthModule],
   providers: [SocketGateway],
-  exports: [SocketGateway],
 })
 export class SocketModule {}

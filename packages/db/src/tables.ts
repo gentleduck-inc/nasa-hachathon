@@ -47,17 +47,49 @@ export const productTypeEnum = pgEnum('product_type', [
 export const users = pgTable(
   'users',
   {
+    avatar_url: text('avatar_url'),
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
     email: varchar('email', { length: 255 }).notNull().unique(),
     first_name: varchar('first_name', { length: 100 }).notNull(),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
     is_active: boolean('is_active').default(true).notNull(),
+    last_login_at: timestamp('last_login_at', { withTimezone: true }),
     last_name: varchar('last_name', { length: 100 }).notNull(),
-    role: userRoleEnum('role').default('operator').notNull(),
+    password_hash: varchar('password_hash', { length: 255 }).notNull(),
+    settings: jsonb('settings').default(sql`'{}'::jsonb`),
     updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
     username: varchar('username', { length: 100 }).notNull().unique(),
+    version: integer('version').default(1).notNull(),
   },
-  (table) => [index('users_role_idx').on(table.role), index('active_users_idx').on(table.is_active)],
+  (table) => [
+    index('active_users_idx').on(table.is_active, table.last_login_at).where(sql`deleted_at IS NULL`),
+    uniqueIndex('user_email_idx').on(table.email),
+    uniqueIndex('user_username_idx').on(table.username),
+  ],
+)
+
+/**
+ * OTP codes
+ */
+export const otpCodes = pgTable(
+  'otp_codes',
+  {
+    code: varchar('code', { length: 6 }).notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    is_active: boolean('is_active').default(true).notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    user_id: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    index('active_codes_idx').on(table.is_active, table.expires_at).where(sql`deleted_at IS NULL`),
+    index('user_codes_idx').on(table.user_id, table.created_at),
+  ],
 )
 
 /**
