@@ -1,15 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "ZodMessages", {
-    enumerable: true,
-    get: function() {
-        return ZodMessages;
-    }
-});
-const ZodMessages = [
-    // Type errors
+export var ZodMessages = [
     'ZOD_EXPECTED_STRING',
     'ZOD_EXPECTED_NUMBER',
     'ZOD_EXPECTED_BOOLEAN',
@@ -21,10 +10,8 @@ const ZodMessages = [
     'ZOD_EXPECTED_FUNCTION',
     'ZOD_EXPECTED_INSTANCE',
     'ZOD_EXPECTED_JSON',
-    // Length constraints
     'ZOD_TOO_SHORT',
     'ZOD_TOO_LONG',
-    // Value constraints
     'ZOD_INVALID_EMAIL',
     'ZOD_INVALID_URL',
     'ZOD_INVALID_UUID',
@@ -35,28 +22,20 @@ const ZodMessages = [
     'ZOD_INVALID_LITERAL',
     'ZOD_INVALID_ARGUMENTS',
     'ZOD_INVALID_RETURN_TYPE',
-    // Custom & parsing
     'ZOD_INVALID',
     'ZOD_REQUIRED',
     'ZOD_FAILED_TO_PARSE',
     'ZOD_UNRECOGNIZED_KEYS',
     'ZOD_CUSTOM',
-    // Coercion errors
     'ZOD_COERCE_FAILED',
     'ZOD_COERCE_DATE_FAILED',
-    // Refinement/transform errors
     'ZOD_REFINEMENT_FAILED',
     'ZOD_TRANSFORM_FAILED',
-    // Union/intersection
     'ZOD_INVALID_UNION',
     'ZOD_INVALID_INTERSECTION',
-    // Array/object index
     'ZOD_INVALID_TYPE_AT_INDEX',
     'ZOD_INVALID_ELEMENT',
-    // Unknown keys
     'ZOD_UNRECOGNIZED_KEYS',
-    // Effects
-    'ZOD_INVALID_EFFECT'
+    'ZOD_INVALID_EFFECT',
 ];
-
 //# sourceMappingURL=zod-errors.constants.js.map

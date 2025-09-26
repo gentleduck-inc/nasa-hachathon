@@ -4,14 +4,14 @@ import { Button } from '@acme/ui/button'
 import { Input } from '@acme/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@acme/ui/react-hook-form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@acme/ui/select'
+import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@acme/ui/sheet'
 import { Textarea } from '@acme/ui/textarea'
 import { zodResolver } from '@hookform/resolvers/zod'
+import React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { createWasteMaterialSchema } from '~/server/waste_materials/waste_materials.dto'
 import { useWasteMaterialsMutations } from './waste-materials-create.hooks'
-import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@acme/ui/sheet'
-import React from 'react'
 
 // Example categories enum
 const WASTE_ENUM = ['plastics', 'metals', 'glass', 'paper', 'organic'] as const
@@ -57,9 +57,9 @@ export function WasteMaterialsCreate({
   const [open, setOpen] = React.useState(false)
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent side="right" className="w-[400px]">
+      <SheetContent className="w-[400px]" side="right">
         <div className="flex-1">
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -146,11 +146,11 @@ export function WasteMaterialsCreate({
                 />
               </div>
 
-              <div className="sticky bottom-0 bg-background border-t pt-4 flex justify-end">
+              <div className="sticky bottom-0 flex justify-end border-t bg-background pt-4">
                 <Button
+                  disabled={!form.formState.isValid || form.formState.isSubmitting || !form.formState.isDirty}
                   size="lg"
-                  type="submit"
-                  disabled={!form.formState.isValid || form.formState.isSubmitting || !form.formState.isDirty}>
+                  type="submit">
                   {defaultValues ? 'Update' : 'Create'} Material
                 </Button>
               </div>

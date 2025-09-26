@@ -1,189 +1,91 @@
 import { relations } from 'drizzle-orm'
 import {
-  apiKeys,
-  attachments,
-  auditLogs,
-  comments,
-  missionCrew,
-  missions,
+  maintenanceRecords,
   processingModules,
   processingRecipes,
-  products,
-  recyclingScenarios,
-  settings,
-  simulationRuns,
+  processingRuns,
+  productInventory,
+  resourceUsage,
+  systemAlerts,
   users,
-  wasteMaterials,
+  wasteInventory,
 } from './tables'
 
-/**
- * User relations
- */
+// Relations
 export const userRelations = relations(users, ({ many }) => ({
-  apiKeys: many(apiKeys),
-  attachments: many(attachments),
-  auditLogs: many(auditLogs),
-  comments: many(comments),
-  createdMissions: many(missions),
-  createdModules: many(processingModules),
   createdRecipes: many(processingRecipes),
-  createdScenarios: many(recyclingScenarios),
-  createdWasteMaterials: many(wasteMaterials),
-  missionAssignments: many(missionCrew),
-  settings: many(settings),
-  simulationRuns: many(simulationRuns),
+  maintenanceRecords: many(maintenanceRecords),
+  processingRuns: many(processingRuns),
+  resolvedAlerts: many(systemAlerts),
 }))
 
-/**
- * API keys relations
- */
-export const apiKeyRelations = relations(apiKeys, ({ one }) => ({
-  user: one(users, {
-    fields: [apiKeys.user_id],
-    references: [users.id],
-  }),
+export const wasteInventoryRelations = relations(wasteInventory, ({ many }) => ({
+  // No direct relations needed for waste inventory
 }))
 
-/**
- * Mission relations
- */
-export const missionRelations = relations(missions, ({ one, many }) => ({
-  createdBy: one(users, {
-    fields: [missions.created_by],
-    references: [users.id],
-  }),
-  crew: many(missionCrew),
-  products: many(products),
-  simulationRuns: many(simulationRuns),
+export const processingModuleRelations = relations(processingModules, ({ many }) => ({
+  maintenanceRecords: many(maintenanceRecords),
+  processingRuns: many(processingRuns),
+  resourceUsage: many(resourceUsage),
 }))
 
-/**
- * Mission crew relations
- */
-export const missionCrewRelations = relations(missionCrew, ({ one }) => ({
-  mission: one(missions, {
-    fields: [missionCrew.mission_id],
-    references: [missions.id],
-  }),
-  user: one(users, {
-    fields: [missionCrew.user_id],
-    references: [users.id],
-  }),
-}))
-
-/**
- * Processing modules relations
- */
-export const processingModuleRelations = relations(processingModules, ({ one }) => ({
-  createdBy: one(users, {
-    fields: [processingModules.created_by],
-    references: [users.id],
-  }),
-}))
-
-/**
- * Processing recipes relations
- */
 export const processingRecipeRelations = relations(processingRecipes, ({ one, many }) => ({
   createdBy: one(users, {
     fields: [processingRecipes.created_by],
     references: [users.id],
   }),
-  products: many(products),
+  processingRuns: many(processingRuns),
 }))
 
-/**
- * Recycling scenarios relations
- */
-export const recyclingScenarioRelations = relations(recyclingScenarios, ({ one, many }) => ({
+export const processingRunRelations = relations(processingRuns, ({ one, many }) => ({
   createdBy: one(users, {
-    fields: [recyclingScenarios.created_by],
+    fields: [processingRuns.created_by],
     references: [users.id],
   }),
-  simulationRuns: many(simulationRuns),
-}))
-
-/**
- * Simulation runs relations
- */
-export const simulationRunRelations = relations(simulationRuns, ({ one, many }) => ({
-  createdBy: one(users, {
-    fields: [simulationRuns.created_by],
-    references: [users.id],
+  module: one(processingModules, {
+    fields: [processingRuns.module_id],
+    references: [processingModules.id],
   }),
-  mission: one(missions, {
-    fields: [simulationRuns.mission_id],
-    references: [missions.id],
-  }),
-  products: many(products),
-  scenario: one(recyclingScenarios, {
-    fields: [simulationRuns.scenario_id],
-    references: [recyclingScenarios.id],
-  }),
-}))
-
-/**
- * Products relations
- */
-export const productRelations = relations(products, ({ one }) => ({
-  mission: one(missions, {
-    fields: [products.mission_id],
-    references: [missions.id],
-  }),
+  productsCreated: many(productInventory),
   recipe: one(processingRecipes, {
-    fields: [products.recipe_id],
+    fields: [processingRuns.recipe_id],
     references: [processingRecipes.id],
   }),
-  simulationRun: one(simulationRuns, {
-    fields: [products.simulation_run_id],
-    references: [simulationRuns.id],
+  resourceUsage: many(resourceUsage),
+}))
+
+export const productInventoryRelations = relations(productInventory, ({ one }) => ({
+  productionRun: one(processingRuns, {
+    fields: [productInventory.production_run_id],
+    references: [processingRuns.id],
   }),
 }))
 
-/**
- * Comments relations
- */
-export const commentRelations = relations(comments, ({ one, many }) => ({
-  author: one(users, {
-    fields: [comments.author_id],
-    references: [users.id],
+export const resourceUsageRelations = relations(resourceUsage, ({ one }) => ({
+  module: one(processingModules, {
+    fields: [resourceUsage.module_id],
+    references: [processingModules.id],
   }),
-  parentComment: one(comments, {
-    fields: [comments.parent_comment_id],
-    references: [comments.id],
-    relationName: 'parentChild',
-  }),
-  replies: many(comments, {
-    relationName: 'parentChild',
+  processingRun: one(processingRuns, {
+    fields: [resourceUsage.processing_run_id],
+    references: [processingRuns.id],
   }),
 }))
 
-/**
- * Attachments relations
- */
-export const attachmentRelations = relations(attachments, ({ one }) => ({
-  uploadedBy: one(users, {
-    fields: [attachments.uploaded_by],
+export const systemAlertRelations = relations(systemAlerts, ({ one }) => ({
+  resolvedBy: one(users, {
+    fields: [systemAlerts.resolved_by],
     references: [users.id],
   }),
 }))
 
-/**
- * Audit logs relations
- */
-export const auditLogRelations = relations(auditLogs, ({ one }) => ({
-  user: one(users, {
-    fields: [auditLogs.user_id],
-    references: [users.id],
+export const maintenanceRecordRelations = relations(maintenanceRecords, ({ one }) => ({
+  module: one(processingModules, {
+    fields: [maintenanceRecords.module_id],
+    references: [processingModules.id],
   }),
-}))
-
-/**
- * Settings relations
- */
-export const settingRelations = relations(settings, ({ one }) => ({
-  user: one(users, {
-    fields: [settings.user_id],
+  performedBy: one(users, {
+    fields: [maintenanceRecords.performed_by],
     references: [users.id],
   }),
 }))

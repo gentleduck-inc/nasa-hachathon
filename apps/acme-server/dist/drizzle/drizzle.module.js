@@ -1,33 +1,31 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "DrizzleModule", {
-    enumerable: true,
-    get: function() {
-        return DrizzleModule;
-    }
-});
-const _common = require("@nestjs/common");
-const _drizzleservice = require("./drizzle.service");
-function _ts_decorate(decorators, target, key, desc) {
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for(var i = decorators.length - 1; i >= 0; i--)if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
-}
-let DrizzleModule = class DrizzleModule {
 };
-DrizzleModule = _ts_decorate([
-    (0, _common.Global)(),
-    (0, _common.Module)({
-        exports: [
-            _drizzleservice.DrizzleAsyncProvider
-        ],
-        providers: [
-            ..._drizzleservice.drizzleProvider
-        ]
-    })
-], DrizzleModule);
-
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+import { Global, Module } from '@nestjs/common';
+import { DrizzleAsyncProvider, drizzleProvider } from './drizzle.service';
+var DrizzleModule = (function () {
+    function DrizzleModule() {
+    }
+    DrizzleModule = __decorate([
+        Global(),
+        Module({
+            exports: [DrizzleAsyncProvider],
+            providers: __spreadArray([], drizzleProvider, true),
+        })
+    ], DrizzleModule);
+    return DrizzleModule;
+}());
+export { DrizzleModule };
 //# sourceMappingURL=drizzle.module.js.map

@@ -1,16 +1,14 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "AuthMessages", {
-    enumerable: true,
-    get: function() {
-        return AuthMessages;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
     }
-});
-const _constants = require("../common/constants");
-const AuthMessages = [
-    // SUCCESS MESSAGES
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+import { ZodMessages } from '~/common/constants';
+export var AuthMessages = __spreadArray([
     'AUTH_REGISTRATION_SUCCESS',
     'AUTH_SIGNIN_SUCCESS',
     'AUTH_SIGNOUT_SUCCESS',
@@ -20,7 +18,6 @@ const AuthMessages = [
     'AUTH_RESET_PASSWORD_SUCCESS',
     'AUTH_DELETE_ACCOUNT_SUCCESS',
     'AUTH_VERIFY_EMAIL_SUCCESS',
-    // ERROR MESSAGES
     'AUTH_INVALID_CREDENTIALS',
     'AUTH_UNAUTHORIZED',
     'AUTH_USERNAME_INVALID',
@@ -42,8 +39,6 @@ const AuthMessages = [
     'AUTH_VERIFY_CODE_FAILED',
     'AUTH_USER_NOT_FOUND_OR_VERIFY_CODE_FAILED',
     'AUTH_USERNAME_ALREADY_EXISTS',
-    'AUTH_EMAIL_ALREADY_EXISTS',
-    ..._constants.ZodMessages
-];
-
+    'AUTH_EMAIL_ALREADY_EXISTS'
+], ZodMessages, true);
 //# sourceMappingURL=auth.constants.js.map

@@ -36,7 +36,7 @@ export default function RootLayout({
         <link crossOrigin="anonymous" href="https://fonts.gstatic.com" rel="preconnect" />
         <link href="https://fonts.googleapis.com/css2?family=Fustat:wght@200..800&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} bg-slate-50 antialiased min-h-svh`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-svh bg-slate-50 antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange enableColorScheme enableSystem>
           <ReactQueryProvider>
             <div vaul-drawer-wrapper="">

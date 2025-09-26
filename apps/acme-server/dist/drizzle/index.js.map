@@ -1,1 +1,1 @@
-{"version":3,"sources":["../../src/drizzle/index.ts"],"sourcesContent":["export * from './drizzle.module'\nexport * from './drizzle.service'\n"],"names":[],"mappings":";;;;qBAAc;qBACA"}
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/drizzle/index.ts"],"names":[],"mappings":"AAAA,cAAc,kBAAkB,CAAA;AAChC,cAAc,mBAAmB,CAAA"}

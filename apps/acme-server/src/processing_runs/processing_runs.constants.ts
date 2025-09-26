@@ -1,0 +1,24 @@
+import { ZodMessages } from '~/common/constants'
+
+export const ProcessingRunsMessages = [
+  // SUCCESS
+  'RUN_CREATED_SUCCESS',
+  'RUN_FETCH_SUCCESS',
+  'RUN_LIST_FETCH_SUCCESS',
+  'RUN_CANCELLED_SUCCESS',
+  'RUN_RETRY_SUCCESS',
+  'RUN_LOGS_FETCH_SUCCESS',
+
+  // ERRORS
+  'RUN_CREATE_FAILED',
+  'RUN_FETCH_FAILED',
+  'RUN_LIST_FETCH_FAILED',
+  'RUN_NOT_FOUND',
+  'RUN_CANCEL_FAILED',
+  'RUN_RETRY_FAILED',
+  'RUN_LOGS_FETCH_FAILED',
+  'RUN_INVALID_STATUS',
+  'RUN_IDEMPOTENCY_KEY_REQUIRED',
+
+  ...ZodMessages,
+] as const

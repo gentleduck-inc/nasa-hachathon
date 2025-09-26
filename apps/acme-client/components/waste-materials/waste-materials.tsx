@@ -2,12 +2,12 @@
 
 import { WasteMaterial } from '@acme/acme-db/types'
 import { Button } from '@acme/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@acme/ui/sheet'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { server_api } from '~/libs/axios'
 import { WasteMaterialsTable } from './waste-materials.chunks'
 import { WasteMaterialsCreate } from './waste-materials-create'
-import { Sheet, SheetContent, SheetTrigger } from '@acme/ui/sheet'
 
 export function WasteMaterials() {
   const { data, isLoading } = useQuery<WasteMaterial[]>({
@@ -55,7 +55,7 @@ export function WasteMaterialsEditButton({ id }: { id: string }) {
         properties: {},
       }}
       id={id}>
-      <Button variant="nothing" className="p-0 h-auto w-full text-start justify-start">
+      <Button className="h-auto w-full justify-start p-0 text-start" variant="nothing">
         Edit
       </Button>
     </WasteMaterialsCreate>

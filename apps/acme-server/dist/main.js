@@ -1,62 +1,101 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-const _core = require("@nestjs/core");
-const _swagger = require("@nestjs/swagger");
-const _connectredis = require("connect-redis");
-const _expresssession = /*#__PURE__*/ _interop_require_default(require("express-session"));
-const _nestjszod = require("nestjs-zod");
-const _redis = require("redis");
-const _appmodule = require("./app.module");
-const _auth = require("./auth");
-function _interop_require_default(obj) {
-    return obj && obj.__esModule ? obj : {
-        default: obj
-    };
-}
-async function bootstrap() {
-    const app = await _core.NestFactory.create(_appmodule.AppModule);
-    app.set('query parser', 'extended');
-    app.set('trust proxy', true);
-    app.setGlobalPrefix('v1');
-    app.enableCors({
-        allowedHeaders: 'Content-Type,Authorization',
-        credentials: true,
-        methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-        optionsSuccessStatus: 204,
-        origin: [
-            'http://localhost:3001',
-            'http://domain:3001'
-        ]
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
-    const redisClient = (0, _redis.createClient)({
-        url: process.env.REDIS_URL
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { RedisStore } from 'connect-redis';
+import session from 'express-session';
+import { patchNestJsSwagger } from 'nestjs-zod';
+import { createClient } from 'redis';
+import { AppModule } from './app.module';
+import { EventsAdapter } from './auth';
+function bootstrap() {
+    return __awaiter(this, void 0, void 0, function () {
+        var app, redisClient, _session, config, documentFactory;
+        var _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0: return [4, NestFactory.create(AppModule)];
+                case 1:
+                    app = _b.sent();
+                    app.set('query parser', 'extended');
+                    app.set('trust proxy', true);
+                    app.setGlobalPrefix('v1');
+                    app.enableCors({
+                        allowedHeaders: 'Content-Type,Authorization',
+                        credentials: true,
+                        methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+                        optionsSuccessStatus: 204,
+                        origin: ['http://localhost:3001', 'http://domain:3001'],
+                    });
+                    redisClient = createClient({
+                        url: process.env.REDIS_URL,
+                    });
+                    return [4, redisClient.connect()];
+                case 2:
+                    _b.sent();
+                    _session = session({
+                        cookie: {
+                            httpOnly: true,
+                            maxAge: 1000 * 60 * 60 * 24,
+                            secure: false,
+                        },
+                        resave: false,
+                        saveUninitialized: false,
+                        secret: process.env.SESSION_SECRET || 'keyboard cat',
+                        store: new RedisStore({ client: redisClient, prefix: 'session:' }),
+                    });
+                    app.use(_session);
+                    app.useWebSocketAdapter(new EventsAdapter(_session));
+                    patchNestJsSwagger();
+                    config = new DocumentBuilder()
+                        .setTitle('acme acme Server')
+                        .setDescription('The acme acme Server API description')
+                        .setVersion('1.0')
+                        .addTag('acme acme Server')
+                        .build();
+                    documentFactory = function () { return SwaggerModule.createDocument(app, config); };
+                    SwaggerModule.setup('api', app, documentFactory);
+                    return [4, app.listen((_a = process.env.PORT) !== null && _a !== void 0 ? _a : 3000)];
+                case 3:
+                    _b.sent();
+                    return [2];
+            }
+        });
     });
-    await redisClient.connect();
-    const _session = (0, _expresssession.default)({
-        cookie: {
-            httpOnly: true,
-            maxAge: 1000 * 60 * 60 * 24,
-            secure: false
-        },
-        resave: false,
-        saveUninitialized: false,
-        secret: process.env.SESSION_SECRET || 'keyboard cat',
-        store: new _connectredis.RedisStore({
-            client: redisClient,
-            prefix: 'session:'
-        })
-    });
-    app.use(_session);
-    app.useWebSocketAdapter(new _auth.EventsAdapter(_session));
-    // Swagger
-    (0, _nestjszod.patchNestJsSwagger)();
-    const config = new _swagger.DocumentBuilder().setTitle('acme acme Server').setDescription('The acme acme Server API description').setVersion('1.0').addTag('acme acme Server').build();
-    const documentFactory = ()=>_swagger.SwaggerModule.createDocument(app, config);
-    _swagger.SwaggerModule.setup('api', app, documentFactory);
-    await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
-
 //# sourceMappingURL=main.js.map

@@ -145,7 +145,7 @@ export function WasteMaterialsTable({ data, isLoading }: WasteMaterialsTableProp
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-2">
+                    <TableCell className="py-2" key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

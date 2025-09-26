@@ -1,15 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "MinioMessage", {
-    enumerable: true,
-    get: function() {
-        return MinioMessage;
-    }
-});
-const MinioMessage = [
-    // SUCCESS MESSAGES
+export var MinioMessage = [
     'MINIO_FILE_UPLOAD_SUCCESS',
     'MINIO_FILE_DOWNLOAD_SUCCESS',
     'MINIO_FILE_DELETE_SUCCESS',
@@ -17,7 +6,6 @@ const MinioMessage = [
     'MINIO_BUCKET_DELETE_SUCCESS',
     'MINIO_GET_PRESIGNED_URL_SUCCESS',
     'MINIO_GET_FILE_METADATA_SUCCESS',
-    // ERROR MESSAGES
     'MINIO_FILE_UPLOAD_FAILED',
     'MINIO_FILE_DOWNLOAD_FAILED',
     'MINIO_FILE_DELETE_FAILED',
@@ -32,7 +20,6 @@ const MinioMessage = [
     'MINIO_CONNECTION_FAILED',
     'MINIO_INTERNAL_ERROR',
     'MINIO_ACCESS_DENIED',
-    'MINIO_FILENAME_ALREADY_EXISTS'
+    'MINIO_FILENAME_ALREADY_EXISTS',
 ];
-
 //# sourceMappingURL=minio.constants.js.map

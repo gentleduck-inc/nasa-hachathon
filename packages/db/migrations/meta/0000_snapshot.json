@@ -6,11 +6,6 @@
   },
   "dialect": "postgresql",
   "enums": {
-    "public.mission_status": {
-      "name": "mission_status",
-      "schema": "public",
-      "values": ["planning", "active", "completed", "aborted"]
-    },
     "public.module_status": {
       "name": "module_status",
       "schema": "public",
@@ -20,54 +15,49 @@
       "name": "product_type",
       "schema": "public",
       "values": [
-        "brick",
-        "tile",
-        "utensil",
-        "container",
+        "insulation_panel",
+        "storage_container",
+        "spare_part",
         "tool",
-        "structural_component",
-        "insulation",
-        "filter",
-        "decorative_item",
-        "spare_part"
+        "structural_beam",
+        "protective_sheet",
+        "filter_component",
+        "building_brick"
       ]
     },
     "public.run_status": {
       "name": "run_status",
       "schema": "public",
-      "values": ["queued", "running", "completed", "failed", "cancelled"]
+      "values": ["queued", "running", "paused", "completed", "failed"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": ["admin", "mission_commander", "crew_member", "engineer", "scientist"]
+      "values": ["admin", "operator", "engineer", "scientist"]
     },
     "public.waste_type": {
       "name": "waste_type",
       "schema": "public",
       "values": [
-        "plastics",
-        "metals",
-        "foam",
-        "textiles",
-        "composites",
-        "eva_waste",
         "food_packaging",
-        "structural_elements",
-        "bubble_wrap",
-        "nitrile_gloves",
-        "other"
+        "clothing_fabric",
+        "metal_components",
+        "foam_insulation",
+        "plastic_containers",
+        "electronic_waste",
+        "organic_waste",
+        "paper_cardboard"
       ]
     }
   },
-  "id": "c00a361a-4436-4d6c-96a3-4c86e914a9d3",
+  "id": "ca9022a8-4aca-43a4-b4fd-07c04a7617b2",
   "policies": {},
   "prevId": "00000000-0000-0000-0000-000000000000",
   "roles": {},
   "schemas": {},
   "sequences": {},
   "tables": {
-    "public.api_keys": {
+    "public.daily_metrics": {
       "checkConstraints": {},
       "columns": {
         "created_at": {
@@ -77,17 +67,12 @@
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "deleted_at": {
-          "name": "deleted_at",
+        "energy_consumed_kwh": {
+          "default": "'0'",
+          "name": "energy_consumed_kwh",
           "notNull": false,
           "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
+          "type": "numeric(10, 3)"
         },
         "id": {
           "default": "gen_random_uuid()",
@@ -96,707 +81,70 @@
           "primaryKey": true,
           "type": "uuid"
         },
-        "is_active": {
-          "default": true,
-          "name": "is_active",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "key_hash": {
-          "name": "key_hash",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(255)"
-        },
-        "last_used_at": {
-          "name": "last_used_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "name": {
-          "name": "name",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(100)"
-        },
-        "permissions": {
-          "default": "'[]'::jsonb",
-          "name": "permissions",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
-        "updated_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "updated_at",
+        "metric_date": {
+          "name": "metric_date",
           "notNull": true,
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "user_id": {
-          "name": "user_id",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "api_keys_user_id_users_id_fk": {
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "name": "api_keys_user_id_users_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "api_keys",
-          "tableTo": "users"
-        }
-      },
-      "indexes": {
-        "active_keys_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "is_active",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "expires_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "active_keys_idx",
-          "where": "deleted_at IS NULL",
-          "with": {}
-        },
-        "api_key_hash_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "key_hash",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": true,
-          "method": "btree",
-          "name": "api_key_hash_idx",
-          "with": {}
-        },
-        "user_keys_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "user_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "user_keys_idx",
-          "with": {}
-        }
-      },
-      "isRLSEnabled": false,
-      "name": "api_keys",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {
-        "api_keys_key_hash_unique": {
-          "columns": ["key_hash"],
-          "name": "api_keys_key_hash_unique",
-          "nullsNotDistinct": false
-        }
-      }
-    },
-    "public.attachments": {
-      "checkConstraints": {},
-      "columns": {
-        "checksum_sha256": {
-          "name": "checksum_sha256",
+        "module_uptime_percent": {
+          "default": 0,
+          "name": "module_uptime_percent",
           "notNull": false,
           "primaryKey": false,
-          "type": "varchar(64)"
+          "type": "real"
         },
-        "created_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "created_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
+        "processing_efficiency": {
+          "default": 0,
+          "name": "processing_efficiency",
           "notNull": false,
           "primaryKey": false,
-          "type": "timestamp with time zone"
+          "type": "real"
         },
-        "filename": {
-          "name": "filename",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(255)"
-        },
-        "id": {
-          "default": "gen_random_uuid()",
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "uuid"
-        },
-        "is_public": {
-          "default": false,
-          "name": "is_public",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "metadata": {
+        "products_by_type": {
           "default": "'{}'::jsonb",
-          "name": "metadata",
+          "name": "products_by_type",
           "notNull": false,
           "primaryKey": false,
           "type": "jsonb"
         },
-        "mime_type": {
-          "name": "mime_type",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(100)"
-        },
-        "original_filename": {
-          "name": "original_filename",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(255)"
-        },
-        "size_bytes": {
-          "name": "size_bytes",
-          "notNull": true,
+        "products_created_count": {
+          "default": 0,
+          "name": "products_created_count",
+          "notNull": false,
           "primaryKey": false,
           "type": "integer"
         },
-        "storage_path": {
-          "name": "storage_path",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "storage_provider": {
-          "default": "'local'",
-          "name": "storage_provider",
+        "quality_score_average": {
+          "default": 0,
+          "name": "quality_score_average",
           "notNull": false,
           "primaryKey": false,
-          "type": "varchar(50)"
+          "type": "real"
         },
-        "updated_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "updated_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "uploaded_by": {
-          "name": "uploaded_by",
+        "waste_processed_kg": {
+          "default": "'0'",
+          "name": "waste_processed_kg",
           "notNull": false,
           "primaryKey": false,
-          "type": "uuid"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "attachments_uploaded_by_users_id_fk": {
-          "columnsFrom": ["uploaded_by"],
-          "columnsTo": ["id"],
-          "name": "attachments_uploaded_by_users_id_fk",
-          "onDelete": "set null",
-          "onUpdate": "no action",
-          "tableFrom": "attachments",
-          "tableTo": "users"
-        }
-      },
-      "indexes": {
-        "attachments_checksum_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "checksum_sha256",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": true,
-          "method": "btree",
-          "name": "attachments_checksum_idx",
-          "where": "checksum_sha256 IS NOT NULL",
-          "with": {}
+          "type": "numeric(10, 3)"
         },
-        "attachments_type_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "mime_type",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "size_bytes",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "attachments_type_idx",
-          "with": {}
-        },
-        "uploader_attachments_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "uploaded_by",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "uploader_attachments_idx",
-          "with": {}
-        }
-      },
-      "isRLSEnabled": false,
-      "name": "attachments",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {}
-    },
-    "public.audit_logs": {
-      "checkConstraints": {},
-      "columns": {
-        "action": {
-          "name": "action",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(100)"
-        },
-        "changes": {
+        "waste_types_processed": {
           "default": "'{}'::jsonb",
-          "name": "changes",
+          "name": "waste_types_processed",
           "notNull": false,
           "primaryKey": false,
           "type": "jsonb"
-        },
-        "created_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "created_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(50)"
-        },
-        "id": {
-          "default": "gen_random_uuid()",
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "uuid"
-        },
-        "ip_address": {
-          "name": "ip_address",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "varchar(45)"
-        },
-        "user_agent": {
-          "name": "user_agent",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "user_id": {
-          "name": "user_id",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "uuid"
         }
       },
       "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "audit_logs_user_id_users_id_fk": {
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "name": "audit_logs_user_id_users_id_fk",
-          "onDelete": "set null",
-          "onUpdate": "no action",
-          "tableFrom": "audit_logs",
-          "tableTo": "users"
-        }
-      },
+      "foreignKeys": {},
       "indexes": {
-        "audit_logs_time_partition_idx": {
+        "daily_metrics_date_idx": {
           "columns": [
             {
               "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "audit_logs_time_partition_idx",
-          "with": {}
-        },
-        "entity_actions_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "entity_type",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "entity_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "entity_actions_idx",
-          "with": {}
-        },
-        "user_actions_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "user_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "user_actions_idx",
-          "with": {}
-        }
-      },
-      "isRLSEnabled": false,
-      "name": "audit_logs",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {}
-    },
-    "public.comments": {
-      "checkConstraints": {},
-      "columns": {
-        "attachments": {
-          "default": "'[]'::jsonb",
-          "name": "attachments",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
-        "author_id": {
-          "name": "author_id",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "content": {
-          "name": "content",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "created_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "created_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(50)"
-        },
-        "id": {
-          "default": "gen_random_uuid()",
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "uuid"
-        },
-        "parent_comment_id": {
-          "name": "parent_comment_id",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "updated_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "updated_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "version": {
-          "default": 1,
-          "name": "version",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "integer"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "comments_author_id_users_id_fk": {
-          "columnsFrom": ["author_id"],
-          "columnsTo": ["id"],
-          "name": "comments_author_id_users_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "comments",
-          "tableTo": "users"
-        },
-        "comments_parent_comment_fk": {
-          "columnsFrom": ["parent_comment_id"],
-          "columnsTo": ["id"],
-          "name": "comments_parent_comment_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "comments",
-          "tableTo": "comments"
-        }
-      },
-      "indexes": {
-        "author_comments_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "author_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "author_comments_idx",
-          "with": {}
-        },
-        "entity_comments_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "entity_type",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "entity_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "entity_comments_idx",
-          "with": {}
-        },
-        "parent_comments_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "parent_comment_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "parent_comments_idx",
-          "with": {}
-        }
-      },
-      "isRLSEnabled": false,
-      "name": "comments",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {}
-    },
-    "public.mission_crew": {
-      "checkConstraints": {},
-      "columns": {
-        "assigned_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "assigned_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "id": {
-          "default": "gen_random_uuid()",
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "uuid"
-        },
-        "mission_id": {
-          "name": "mission_id",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "removed_at": {
-          "name": "removed_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "role": {
-          "name": "role",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "user_role",
-          "typeSchema": "public"
-        },
-        "specialization": {
-          "name": "specialization",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "varchar(100)"
-        },
-        "user_id": {
-          "name": "user_id",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "mission_crew_mission_id_missions_id_fk": {
-          "columnsFrom": ["mission_id"],
-          "columnsTo": ["id"],
-          "name": "mission_crew_mission_id_missions_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "mission_crew",
-          "tableTo": "missions"
-        },
-        "mission_crew_user_id_users_id_fk": {
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "name": "mission_crew_user_id_users_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "mission_crew",
-          "tableTo": "users"
-        }
-      },
-      "indexes": {
-        "mission_crew_unique_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "mission_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "user_id",
+              "expression": "metric_date",
               "isExpression": false,
               "nulls": "last"
             }
@@ -804,21 +152,14 @@
           "concurrently": false,
           "isUnique": true,
           "method": "btree",
-          "name": "mission_crew_unique_idx",
-          "where": "removed_at IS NULL",
+          "name": "daily_metrics_date_idx",
           "with": {}
         },
-        "user_missions_idx": {
+        "daily_metrics_efficiency_idx": {
           "columns": [
             {
               "asc": true,
-              "expression": "user_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "assigned_at",
+              "expression": "processing_efficiency",
               "isExpression": false,
               "nulls": "last"
             }
@@ -826,42 +167,50 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "user_missions_idx",
+          "name": "daily_metrics_efficiency_idx",
+          "with": {}
+        },
+        "waste_processed_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "waste_processed_kg",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "waste_processed_idx",
           "with": {}
         }
       },
       "isRLSEnabled": false,
-      "name": "mission_crew",
+      "name": "daily_metrics",
       "policies": {},
       "schema": "",
       "uniqueConstraints": {}
     },
-    "public.missions": {
+    "public.maintenance_records": {
       "checkConstraints": {},
       "columns": {
+        "completed_date": {
+          "name": "completed_date",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        },
+        "cost_estimate": {
+          "name": "cost_estimate",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "numeric(10, 2)"
+        },
         "created_at": {
           "default": "CURRENT_TIMESTAMP",
           "name": "created_at",
           "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "created_by": {
-          "name": "created_by",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "crew_size": {
-          "default": 8,
-          "name": "crew_size",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "smallint"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "notNull": false,
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
@@ -871,6 +220,24 @@
           "primaryKey": false,
           "type": "text"
         },
+        "duration_hours": {
+          "name": "duration_hours",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "numeric(4, 1)"
+        },
+        "efficiency_after": {
+          "name": "efficiency_after",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "real"
+        },
+        "efficiency_before": {
+          "name": "efficiency_before",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "real"
+        },
         "id": {
           "default": "gen_random_uuid()",
           "name": "id",
@@ -878,120 +245,108 @@
           "primaryKey": true,
           "type": "uuid"
         },
-        "landing_date": {
-          "name": "landing_date",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "landing_site": {
-          "default": "'Jezero Crater'",
-          "name": "landing_site",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "varchar(100)"
-        },
-        "launch_date": {
-          "name": "launch_date",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "mission_duration_days": {
-          "default": 1095,
-          "name": "mission_duration_days",
+        "maintenance_type": {
+          "name": "maintenance_type",
           "notNull": true,
           "primaryKey": false,
-          "type": "integer"
+          "type": "varchar(50)"
         },
-        "name": {
-          "name": "name",
+        "module_id": {
+          "name": "module_id",
           "notNull": true,
           "primaryKey": false,
-          "type": "varchar(200)"
+          "type": "uuid"
         },
-        "return_date": {
-          "name": "return_date",
+        "notes": {
+          "name": "notes",
           "notNull": false,
           "primaryKey": false,
-          "type": "timestamp with time zone"
+          "type": "text"
         },
-        "settings": {
-          "default": "'{}'::jsonb",
-          "name": "settings",
+        "parts_replaced": {
+          "default": "'[]'::jsonb",
+          "name": "parts_replaced",
           "notNull": false,
           "primaryKey": false,
           "type": "jsonb"
         },
-        "status": {
-          "default": "'planning'",
-          "name": "status",
-          "notNull": true,
+        "performed_by": {
+          "name": "performed_by",
+          "notNull": false,
           "primaryKey": false,
-          "type": "mission_status",
-          "typeSchema": "public"
+          "type": "uuid"
         },
-        "updated_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "updated_at",
-          "notNull": true,
+        "scheduled_date": {
+          "name": "scheduled_date",
+          "notNull": false,
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "version": {
-          "default": 1,
-          "name": "version",
-          "notNull": true,
+        "status": {
+          "default": "'scheduled'",
+          "name": "status",
+          "notNull": false,
           "primaryKey": false,
-          "type": "integer"
+          "type": "varchar(20)"
         }
       },
       "compositePrimaryKeys": {},
       "foreignKeys": {
-        "missions_created_by_users_id_fk": {
-          "columnsFrom": ["created_by"],
+        "maintenance_records_module_id_processing_modules_id_fk": {
+          "columnsFrom": ["module_id"],
           "columnsTo": ["id"],
-          "name": "missions_created_by_users_id_fk",
-          "onDelete": "restrict",
+          "name": "maintenance_records_module_id_processing_modules_id_fk",
+          "onDelete": "no action",
           "onUpdate": "no action",
-          "tableFrom": "missions",
+          "tableFrom": "maintenance_records",
+          "tableTo": "processing_modules"
+        },
+        "maintenance_records_performed_by_users_id_fk": {
+          "columnsFrom": ["performed_by"],
+          "columnsTo": ["id"],
+          "name": "maintenance_records_performed_by_users_id_fk",
+          "onDelete": "no action",
+          "onUpdate": "no action",
+          "tableFrom": "maintenance_records",
           "tableTo": "users"
         }
       },
       "indexes": {
-        "active_missions_idx": {
+        "maintenance_date_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "scheduled_date",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "maintenance_date_idx",
+          "with": {}
+        },
+        "maintenance_status_idx": {
           "columns": [
             {
               "asc": true,
               "expression": "status",
               "isExpression": false,
               "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "landing_date",
-              "isExpression": false,
-              "nulls": "last"
             }
           ],
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "active_missions_idx",
-          "where": "deleted_at IS NULL",
+          "name": "maintenance_status_idx",
           "with": {}
         },
-        "created_by_missions_idx": {
+        "maintenance_type_idx": {
           "columns": [
             {
               "asc": true,
-              "expression": "created_by",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
+              "expression": "maintenance_type",
               "isExpression": false,
               "nulls": "last"
             }
@@ -999,20 +354,14 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "created_by_missions_idx",
+          "name": "maintenance_type_idx",
           "with": {}
         },
-        "status_missions_idx": {
+        "module_maintenance_idx": {
           "columns": [
             {
               "asc": true,
-              "expression": "status",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "launch_date",
+              "expression": "module_id",
               "isExpression": false,
               "nulls": "last"
             }
@@ -1020,12 +369,12 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "status_missions_idx",
+          "name": "module_maintenance_idx",
           "with": {}
         }
       },
       "isRLSEnabled": false,
-      "name": "missions",
+      "name": "maintenance_records",
       "policies": {},
       "schema": "",
       "uniqueConstraints": {}
@@ -1047,30 +396,11 @@
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "created_by": {
-          "name": "created_by",
-          "notNull": true,
+        "current_recipe_id": {
+          "name": "current_recipe_id",
+          "notNull": false,
           "primaryKey": false,
           "type": "uuid"
-        },
-        "crew_time_minutes_per_kg": {
-          "default": "'0'",
-          "name": "crew_time_minutes_per_kg",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "numeric(6, 2)"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "description": {
-          "name": "description",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
         },
         "efficiency_rating": {
           "default": 1,
@@ -1079,6 +409,12 @@
           "primaryKey": false,
           "type": "real"
         },
+        "estimated_completion": {
+          "name": "estimated_completion",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        },
         "id": {
           "default": "gen_random_uuid()",
           "name": "id",
@@ -1086,19 +422,12 @@
           "primaryKey": true,
           "type": "uuid"
         },
-        "is_public": {
-          "default": true,
-          "name": "is_public",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "maintenance_hours_per_day": {
-          "default": "'0'",
-          "name": "maintenance_hours_per_day",
+        "maintenance_hours_remaining": {
+          "default": 1000,
+          "name": "maintenance_hours_remaining",
           "notNull": false,
           "primaryKey": false,
-          "type": "numeric(4, 2)"
+          "type": "integer"
         },
         "module_type": {
           "name": "module_type",
@@ -1138,36 +467,28 @@
           "notNull": true,
           "primaryKey": false,
           "type": "timestamp with time zone"
-        },
-        "version": {
-          "default": 1,
-          "name": "version",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "integer"
         }
       },
       "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "processing_modules_created_by_users_id_fk": {
-          "columnsFrom": ["created_by"],
-          "columnsTo": ["id"],
-          "name": "processing_modules_created_by_users_id_fk",
-          "onDelete": "restrict",
-          "onUpdate": "no action",
-          "tableFrom": "processing_modules",
-          "tableTo": "users"
-        }
-      },
+      "foreignKeys": {},
       "indexes": {
-        "created_by_modules_idx": {
+        "module_status_idx": {
           "columns": [
             {
               "asc": true,
-              "expression": "created_by",
+              "expression": "status",
               "isExpression": false,
               "nulls": "last"
-            },
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "module_status_idx",
+          "with": {}
+        },
+        "module_type_idx": {
+          "columns": [
             {
               "asc": true,
               "expression": "module_type",
@@ -1178,38 +499,11 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "created_by_modules_idx",
+          "name": "module_type_idx",
           "with": {}
         },
-        "modules_public_idx": {
+        "processing_modules_efficiency_idx": {
           "columns": [
-            {
-              "asc": true,
-              "expression": "is_public",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "module_type",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "modules_public_idx",
-          "with": {}
-        },
-        "modules_type_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "module_type",
-              "isExpression": false,
-              "nulls": "last"
-            },
             {
               "asc": true,
               "expression": "efficiency_rating",
@@ -1220,28 +514,7 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "modules_type_idx",
-          "with": {}
-        },
-        "status_modules_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "status",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "throughput_kg_per_hour",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "status_modules_idx",
+          "name": "processing_modules_efficiency_idx",
           "with": {}
         }
       },
@@ -1263,22 +536,9 @@
         },
         "created_by": {
           "name": "created_by",
-          "notNull": true,
+          "notNull": false,
           "primaryKey": false,
           "type": "uuid"
-        },
-        "crew_time_minutes": {
-          "default": 0,
-          "name": "crew_time_minutes",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "integer"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
         },
         "description": {
           "name": "description",
@@ -1299,16 +559,16 @@
           "primaryKey": true,
           "type": "uuid"
         },
-        "inputs": {
-          "name": "inputs",
+        "input_materials": {
+          "name": "input_materials",
           "notNull": true,
           "primaryKey": false,
           "type": "jsonb"
         },
-        "is_public": {
+        "is_active": {
           "default": true,
-          "name": "is_public",
-          "notNull": true,
+          "name": "is_active",
+          "notNull": false,
           "primaryKey": false,
           "type": "boolean"
         },
@@ -1318,15 +578,8 @@
           "primaryKey": false,
           "type": "varchar(200)"
         },
-        "output_product_type": {
-          "name": "output_product_type",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "product_type",
-          "typeSchema": "public"
-        },
-        "outputs": {
-          "name": "outputs",
+        "output_products": {
+          "name": "output_products",
           "notNull": true,
           "primaryKey": false,
           "type": "jsonb"
@@ -1350,6 +603,12 @@
           "primaryKey": false,
           "type": "real"
         },
+        "required_modules": {
+          "name": "required_modules",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "jsonb"
+        },
         "updated_at": {
           "default": "CURRENT_TIMESTAMP",
           "name": "updated_at",
@@ -1357,15 +616,8 @@
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "version": {
-          "default": 1,
-          "name": "version",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "integer"
-        },
         "yield_percentage": {
-          "default": 0.8,
+          "default": 0.85,
           "name": "yield_percentage",
           "notNull": false,
           "primaryKey": false,
@@ -1378,24 +630,18 @@
           "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
           "name": "processing_recipes_created_by_users_id_fk",
-          "onDelete": "restrict",
+          "onDelete": "no action",
           "onUpdate": "no action",
           "tableFrom": "processing_recipes",
           "tableTo": "users"
         }
       },
       "indexes": {
-        "created_by_recipes_idx": {
+        "created_by_idx": {
           "columns": [
             {
               "asc": true,
               "expression": "created_by",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "output_product_type",
               "isExpression": false,
               "nulls": "last"
             }
@@ -1403,10 +649,25 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "created_by_recipes_idx",
+          "name": "created_by_idx",
           "with": {}
         },
-        "recipes_efficiency_idx": {
+        "recipe_active_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "is_active",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "recipe_active_idx",
+          "with": {}
+        },
+        "recipe_efficiency_idx": {
           "columns": [
             {
               "asc": true,
@@ -1424,49 +685,7 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "recipes_efficiency_idx",
-          "with": {}
-        },
-        "recipes_product_type_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "output_product_type",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "quality_score",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "recipes_product_type_idx",
-          "with": {}
-        },
-        "recipes_public_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "is_public",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "output_product_type",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "recipes_public_idx",
+          "name": "recipe_efficiency_idx",
           "with": {}
         }
       },
@@ -1476,689 +695,21 @@
       "schema": "",
       "uniqueConstraints": {}
     },
-    "public.products": {
+    "public.processing_runs": {
       "checkConstraints": {},
       "columns": {
-        "created_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "created_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "creation_date": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "creation_date",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "description": {
-          "name": "description",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "id": {
-          "default": "gen_random_uuid()",
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "uuid"
-        },
-        "is_in_use": {
-          "default": false,
-          "name": "is_in_use",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "mass_kg": {
-          "name": "mass_kg",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "numeric(8, 3)"
-        },
-        "mission_id": {
-          "name": "mission_id",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(200)"
-        },
-        "product_type": {
-          "name": "product_type",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "product_type",
-          "typeSchema": "public"
-        },
-        "properties": {
-          "default": "'{}'::jsonb",
-          "name": "properties",
+        "actual_outputs": {
+          "name": "actual_outputs",
           "notNull": false,
           "primaryKey": false,
           "type": "jsonb"
         },
-        "quality_score": {
-          "default": 1,
-          "name": "quality_score",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "real"
-        },
-        "recipe_id": {
-          "name": "recipe_id",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "simulation_run_id": {
-          "name": "simulation_run_id",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "source_materials": {
-          "name": "source_materials",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
-        "updated_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "updated_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "version": {
-          "default": 1,
-          "name": "version",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "integer"
-        },
-        "volume_m3": {
-          "name": "volume_m3",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "numeric(8, 4)"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "products_mission_id_missions_id_fk": {
-          "columnsFrom": ["mission_id"],
-          "columnsTo": ["id"],
-          "name": "products_mission_id_missions_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "products",
-          "tableTo": "missions"
-        },
-        "products_recipe_id_processing_recipes_id_fk": {
-          "columnsFrom": ["recipe_id"],
-          "columnsTo": ["id"],
-          "name": "products_recipe_id_processing_recipes_id_fk",
-          "onDelete": "set null",
-          "onUpdate": "no action",
-          "tableFrom": "products",
-          "tableTo": "processing_recipes"
-        },
-        "products_simulation_run_id_simulation_runs_id_fk": {
-          "columnsFrom": ["simulation_run_id"],
-          "columnsTo": ["id"],
-          "name": "products_simulation_run_id_simulation_runs_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "products",
-          "tableTo": "simulation_runs"
-        }
-      },
-      "indexes": {
-        "mission_products_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "mission_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "product_type",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "mission_products_idx",
-          "with": {}
-        },
-        "run_products_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "simulation_run_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "creation_date",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "run_products_idx",
-          "with": {}
-        },
-        "type_products_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "product_type",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "quality_score",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "type_products_idx",
-          "with": {}
-        }
-      },
-      "isRLSEnabled": false,
-      "name": "products",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {}
-    },
-    "public.recycling_scenarios": {
-      "checkConstraints": {},
-      "columns": {
-        "automated_flow": {
-          "name": "automated_flow",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
-        "created_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "created_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "created_by": {
-          "name": "created_by",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "description": {
-          "name": "description",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "estimated_energy_kwh": {
-          "name": "estimated_energy_kwh",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "numeric(8, 3)"
-        },
-        "estimated_time_minutes": {
-          "name": "estimated_time_minutes",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "integer"
-        },
-        "id": {
-          "default": "gen_random_uuid()",
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "uuid"
-        },
-        "input_materials": {
-          "name": "input_materials",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
-        "is_public": {
-          "default": true,
-          "name": "is_public",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "name": {
-          "name": "name",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(200)"
-        },
-        "output_products": {
-          "name": "output_products",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
-        "recipe_ids": {
-          "default": "'[]'::jsonb",
-          "name": "recipe_ids",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
-        "scenario_type": {
-          "name": "scenario_type",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(50)"
-        },
-        "success_rate": {
-          "default": 1,
-          "name": "success_rate",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "real"
-        },
-        "updated_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "updated_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "version": {
-          "default": 1,
-          "name": "version",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "integer"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "recycling_scenarios_created_by_users_id_fk": {
-          "columnsFrom": ["created_by"],
-          "columnsTo": ["id"],
-          "name": "recycling_scenarios_created_by_users_id_fk",
-          "onDelete": "restrict",
-          "onUpdate": "no action",
-          "tableFrom": "recycling_scenarios",
-          "tableTo": "users"
-        }
-      },
-      "indexes": {
-        "created_by_scenarios_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "created_by",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "scenario_type",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "created_by_scenarios_idx",
-          "with": {}
-        },
-        "scenarios_public_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "is_public",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "scenario_type",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "scenarios_public_idx",
-          "with": {}
-        },
-        "scenarios_type_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "scenario_type",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "success_rate",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "scenarios_type_idx",
-          "with": {}
-        }
-      },
-      "isRLSEnabled": false,
-      "name": "recycling_scenarios",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {}
-    },
-    "public.search_index": {
-      "checkConstraints": {},
-      "columns": {
-        "content": {
-          "name": "content",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "created_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "created_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(50)"
-        },
-        "id": {
-          "default": "gen_random_uuid()",
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "uuid"
-        },
-        "search_vector": {
-          "name": "search_vector",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "tags": {
-          "default": "'[]'::jsonb",
-          "name": "tags",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
-        "title": {
-          "name": "title",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "updated_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "updated_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {},
-      "indexes": {
-        "entity_search_unique_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "entity_type",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "entity_id",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": true,
-          "method": "btree",
-          "name": "entity_search_unique_idx",
-          "with": {}
-        },
-        "search_tags_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "tags",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "search_tags_idx",
-          "with": {}
-        }
-      },
-      "isRLSEnabled": false,
-      "name": "search_index",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {}
-    },
-    "public.settings": {
-      "checkConstraints": {},
-      "columns": {
-        "category": {
-          "default": "'general'",
-          "name": "category",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "varchar(50)"
-        },
-        "created_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "created_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "description": {
-          "name": "description",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "id": {
-          "default": "gen_random_uuid()",
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "uuid"
-        },
-        "is_system": {
-          "default": false,
-          "name": "is_system",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "key": {
-          "name": "key",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(100)"
-        },
-        "updated_at": {
-          "default": "CURRENT_TIMESTAMP",
-          "name": "updated_at",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "user_id": {
-          "name": "user_id",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "value": {
-          "name": "value",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "jsonb"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "settings_user_id_users_id_fk": {
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "name": "settings_user_id_users_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "settings",
-          "tableTo": "users"
-        }
-      },
-      "indexes": {
-        "settings_category_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "category",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "is_system",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "settings_category_idx",
-          "with": {}
-        },
-        "system_settings_unique_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "key",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": true,
-          "method": "btree",
-          "name": "system_settings_unique_idx",
-          "where": "user_id IS NULL AND is_system = true",
-          "with": {}
-        },
-        "user_settings_unique_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "user_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "key",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": true,
-          "method": "btree",
-          "name": "user_settings_unique_idx",
-          "where": "user_id IS NOT NULL",
-          "with": {}
-        }
-      },
-      "isRLSEnabled": false,
-      "name": "settings",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {}
-    },
-    "public.simulation_runs": {
-      "checkConstraints": {},
-      "columns": {
         "completed_at": {
           "name": "completed_at",
           "notNull": false,
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "config": {
-          "name": "config",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "jsonb"
-        },
         "created_at": {
           "default": "CURRENT_TIMESTAMP",
           "name": "created_at",
@@ -2168,21 +719,15 @@
         },
         "created_by": {
           "name": "created_by",
-          "notNull": true,
+          "notNull": false,
           "primaryKey": false,
           "type": "uuid"
         },
-        "deleted_at": {
-          "name": "deleted_at",
+        "energy_consumed_kwh": {
+          "name": "energy_consumed_kwh",
           "notNull": false,
           "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "description": {
-          "name": "description",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
+          "type": "numeric(8, 3)"
         },
         "error_message": {
           "name": "error_message",
@@ -2190,6 +735,12 @@
           "primaryKey": false,
           "type": "text"
         },
+        "estimated_outputs": {
+          "name": "estimated_outputs",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "jsonb"
+        },
         "id": {
           "default": "gen_random_uuid()",
           "name": "id",
@@ -2197,9 +748,15 @@
           "primaryKey": true,
           "type": "uuid"
         },
-        "mission_id": {
-          "name": "mission_id",
-          "notNull": false,
+        "input_quantities": {
+          "name": "input_quantities",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "jsonb"
+        },
+        "module_id": {
+          "name": "module_id",
+          "notNull": true,
           "primaryKey": false,
           "type": "uuid"
         },
@@ -2208,6 +765,12 @@
           "notNull": true,
           "primaryKey": false,
           "type": "varchar(200)"
+        },
+        "operator_notes": {
+          "name": "operator_notes",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "text"
         },
         "progress_percent": {
           "default": 0,
@@ -2216,22 +779,15 @@
           "primaryKey": false,
           "type": "smallint"
         },
-        "results": {
-          "default": "'{}'::jsonb",
-          "name": "results",
+        "quality_check_passed": {
+          "name": "quality_check_passed",
           "notNull": false,
           "primaryKey": false,
-          "type": "jsonb"
+          "type": "boolean"
         },
-        "run_type": {
-          "name": "run_type",
+        "recipe_id": {
+          "name": "recipe_id",
           "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(50)"
-        },
-        "scenario_id": {
-          "name": "scenario_id",
-          "notNull": false,
           "primaryKey": false,
           "type": "uuid"
         },
@@ -2255,54 +811,86 @@
           "notNull": true,
           "primaryKey": false,
           "type": "timestamp with time zone"
-        },
-        "version": {
-          "default": 1,
-          "name": "version",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "integer"
         }
       },
       "compositePrimaryKeys": {},
       "foreignKeys": {
-        "simulation_runs_created_by_users_id_fk": {
+        "processing_runs_created_by_users_id_fk": {
           "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "name": "simulation_runs_created_by_users_id_fk",
-          "onDelete": "restrict",
+          "name": "processing_runs_created_by_users_id_fk",
+          "onDelete": "no action",
           "onUpdate": "no action",
-          "tableFrom": "simulation_runs",
+          "tableFrom": "processing_runs",
           "tableTo": "users"
         },
-        "simulation_runs_mission_id_missions_id_fk": {
-          "columnsFrom": ["mission_id"],
+        "processing_runs_module_id_processing_modules_id_fk": {
+          "columnsFrom": ["module_id"],
           "columnsTo": ["id"],
-          "name": "simulation_runs_mission_id_missions_id_fk",
-          "onDelete": "cascade",
+          "name": "processing_runs_module_id_processing_modules_id_fk",
+          "onDelete": "no action",
           "onUpdate": "no action",
-          "tableFrom": "simulation_runs",
-          "tableTo": "missions"
+          "tableFrom": "processing_runs",
+          "tableTo": "processing_modules"
         },
-        "simulation_runs_scenario_id_recycling_scenarios_id_fk": {
-          "columnsFrom": ["scenario_id"],
+        "processing_runs_recipe_id_processing_recipes_id_fk": {
+          "columnsFrom": ["recipe_id"],
           "columnsTo": ["id"],
-          "name": "simulation_runs_scenario_id_recycling_scenarios_id_fk",
-          "onDelete": "set null",
+          "name": "processing_runs_recipe_id_processing_recipes_id_fk",
+          "onDelete": "no action",
           "onUpdate": "no action",
-          "tableFrom": "simulation_runs",
-          "tableTo": "recycling_scenarios"
+          "tableFrom": "processing_runs",
+          "tableTo": "processing_recipes"
         }
       },
       "indexes": {
-        "active_runs_idx": {
+        "completion_date_idx": {
           "columns": [
             {
               "asc": true,
-              "expression": "status",
+              "expression": "completed_at",
               "isExpression": false,
               "nulls": "last"
-            },
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "completion_date_idx",
+          "with": {}
+        },
+        "module_runs_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "module_id",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "module_runs_idx",
+          "with": {}
+        },
+        "recipe_runs_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "recipe_id",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "recipe_runs_idx",
+          "with": {}
+        },
+        "run_progress_idx": {
+          "columns": [
             {
               "asc": true,
               "expression": "progress_percent",
@@ -2313,109 +901,215 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "active_runs_idx",
-          "where": "deleted_at IS NULL",
+          "name": "run_progress_idx",
           "with": {}
         },
-        "mission_runs_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "mission_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "mission_runs_idx",
-          "with": {}
-        },
-        "scenario_runs_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "scenario_id",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "scenario_runs_idx",
-          "with": {}
-        },
-        "status_runs_idx": {
+        "run_status_idx": {
           "columns": [
             {
               "asc": true,
               "expression": "status",
               "isExpression": false,
               "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
             }
           ],
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "status_runs_idx",
-          "with": {}
-        },
-        "user_runs_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "created_by",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "user_runs_idx",
+          "name": "run_status_idx",
           "with": {}
         }
       },
       "isRLSEnabled": false,
-      "name": "simulation_runs",
+      "name": "processing_runs",
       "policies": {},
       "schema": "",
       "uniqueConstraints": {}
     },
-    "public.users": {
+    "public.product_inventory": {
       "checkConstraints": {},
       "columns": {
-        "avatar_url": {
-          "name": "avatar_url",
+        "created_at": {
+          "default": "CURRENT_TIMESTAMP",
+          "name": "created_at",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        },
+        "id": {
+          "default": "gen_random_uuid()",
+          "name": "id",
+          "notNull": true,
+          "primaryKey": true,
+          "type": "uuid"
+        },
+        "is_available": {
+          "default": true,
+          "name": "is_available",
           "notNull": false,
           "primaryKey": false,
-          "type": "text"
+          "type": "boolean"
+        },
+        "location": {
+          "name": "location",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar(100)"
+        },
+        "product_type": {
+          "name": "product_type",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "product_type",
+          "typeSchema": "public"
+        },
+        "production_run_id": {
+          "name": "production_run_id",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "uuid"
+        },
+        "properties": {
+          "default": "'{}'::jsonb",
+          "name": "properties",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "jsonb"
+        },
+        "quality_score": {
+          "default": 1,
+          "name": "quality_score",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "real"
+        },
+        "quantity": {
+          "name": "quantity",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "integer"
+        },
+        "reserved_quantity": {
+          "default": 0,
+          "name": "reserved_quantity",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "integer"
+        },
+        "total_mass_kg": {
+          "name": "total_mass_kg",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "numeric(10, 3)"
+        },
+        "unit_mass_kg": {
+          "name": "unit_mass_kg",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "numeric(8, 3)"
+        },
+        "updated_at": {
+          "default": "CURRENT_TIMESTAMP",
+          "name": "updated_at",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "foreignKeys": {
+        "product_inventory_production_run_id_processing_runs_id_fk": {
+          "columnsFrom": ["production_run_id"],
+          "columnsTo": ["id"],
+          "name": "product_inventory_production_run_id_processing_runs_id_fk",
+          "onDelete": "no action",
+          "onUpdate": "no action",
+          "tableFrom": "product_inventory",
+          "tableTo": "processing_runs"
+        }
+      },
+      "indexes": {
+        "availability_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "is_available",
+              "isExpression": false,
+              "nulls": "last"
+            },
+            {
+              "asc": true,
+              "expression": "quantity",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "availability_idx",
+          "with": {}
+        },
+        "location_products_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "location",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "location_products_idx",
+          "with": {}
+        },
+        "product_type_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "product_type",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "product_type_idx",
+          "with": {}
+        },
+        "production_run_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "production_run_id",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "production_run_idx",
+          "with": {}
+        }
+      },
+      "isRLSEnabled": false,
+      "name": "product_inventory",
+      "policies": {},
+      "schema": "",
+      "uniqueConstraints": {}
+    },
+    "public.resource_usage": {
+      "checkConstraints": {},
+      "columns": {
+        "cost_estimate": {
+          "name": "cost_estimate",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "numeric(10, 2)"
         },
         "created_at": {
           "default": "CURRENT_TIMESTAMP",
@@ -2424,9 +1118,311 @@
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "deleted_at": {
-          "name": "deleted_at",
+        "id": {
+          "default": "gen_random_uuid()",
+          "name": "id",
+          "notNull": true,
+          "primaryKey": true,
+          "type": "uuid"
+        },
+        "module_id": {
+          "name": "module_id",
           "notNull": false,
+          "primaryKey": false,
+          "type": "uuid"
+        },
+        "processing_run_id": {
+          "name": "processing_run_id",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "uuid"
+        },
+        "quantity_used": {
+          "name": "quantity_used",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "numeric(10, 3)"
+        },
+        "resource_type": {
+          "name": "resource_type",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar(50)"
+        },
+        "unit": {
+          "name": "unit",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar(20)"
+        },
+        "usage_date": {
+          "name": "usage_date",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "foreignKeys": {
+        "resource_usage_module_id_processing_modules_id_fk": {
+          "columnsFrom": ["module_id"],
+          "columnsTo": ["id"],
+          "name": "resource_usage_module_id_processing_modules_id_fk",
+          "onDelete": "no action",
+          "onUpdate": "no action",
+          "tableFrom": "resource_usage",
+          "tableTo": "processing_modules"
+        },
+        "resource_usage_processing_run_id_processing_runs_id_fk": {
+          "columnsFrom": ["processing_run_id"],
+          "columnsTo": ["id"],
+          "name": "resource_usage_processing_run_id_processing_runs_id_fk",
+          "onDelete": "no action",
+          "onUpdate": "no action",
+          "tableFrom": "resource_usage",
+          "tableTo": "processing_runs"
+        }
+      },
+      "indexes": {
+        "module_usage_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "module_id",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "module_usage_idx",
+          "with": {}
+        },
+        "processing_run_usage_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "processing_run_id",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "processing_run_usage_idx",
+          "with": {}
+        },
+        "resource_type_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "resource_type",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "resource_type_idx",
+          "with": {}
+        },
+        "usage_date_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "usage_date",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "usage_date_idx",
+          "with": {}
+        }
+      },
+      "isRLSEnabled": false,
+      "name": "resource_usage",
+      "policies": {},
+      "schema": "",
+      "uniqueConstraints": {}
+    },
+    "public.system_alerts": {
+      "checkConstraints": {},
+      "columns": {
+        "alert_type": {
+          "name": "alert_type",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar(50)"
+        },
+        "created_at": {
+          "default": "CURRENT_TIMESTAMP",
+          "name": "created_at",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "uuid"
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "varchar(50)"
+        },
+        "id": {
+          "default": "gen_random_uuid()",
+          "name": "id",
+          "notNull": true,
+          "primaryKey": true,
+          "type": "uuid"
+        },
+        "is_resolved": {
+          "default": false,
+          "name": "is_resolved",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "boolean"
+        },
+        "message": {
+          "name": "message",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "text"
+        },
+        "resolution_notes": {
+          "name": "resolution_notes",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "text"
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        },
+        "resolved_by": {
+          "name": "resolved_by",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "uuid"
+        },
+        "severity": {
+          "name": "severity",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar(20)"
+        },
+        "title": {
+          "name": "title",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar(200)"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "foreignKeys": {
+        "system_alerts_resolved_by_users_id_fk": {
+          "columnsFrom": ["resolved_by"],
+          "columnsTo": ["id"],
+          "name": "system_alerts_resolved_by_users_id_fk",
+          "onDelete": "no action",
+          "onUpdate": "no action",
+          "tableFrom": "system_alerts",
+          "tableTo": "users"
+        }
+      },
+      "indexes": {
+        "alert_entity_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "entity_type",
+              "isExpression": false,
+              "nulls": "last"
+            },
+            {
+              "asc": true,
+              "expression": "entity_id",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "alert_entity_idx",
+          "with": {}
+        },
+        "alert_resolved_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "is_resolved",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "alert_resolved_idx",
+          "with": {}
+        },
+        "alert_severity_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "severity",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "alert_severity_idx",
+          "with": {}
+        },
+        "alert_type_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "alert_type",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "alert_type_idx",
+          "with": {}
+        }
+      },
+      "isRLSEnabled": false,
+      "name": "system_alerts",
+      "policies": {},
+      "schema": "",
+      "uniqueConstraints": {}
+    },
+    "public.users": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "default": "CURRENT_TIMESTAMP",
+          "name": "created_at",
+          "notNull": true,
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
@@ -2456,38 +1452,19 @@
           "primaryKey": false,
           "type": "boolean"
         },
-        "last_login_at": {
-          "name": "last_login_at",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
         "last_name": {
           "name": "last_name",
           "notNull": true,
           "primaryKey": false,
           "type": "varchar(100)"
         },
-        "password_hash": {
-          "name": "password_hash",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(255)"
-        },
         "role": {
-          "default": "'crew_member'",
+          "default": "'operator'",
           "name": "role",
           "notNull": true,
           "primaryKey": false,
           "type": "user_role",
           "typeSchema": "public"
-        },
-        "settings": {
-          "default": "'{}'::jsonb",
-          "name": "settings",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "jsonb"
         },
         "updated_at": {
           "default": "CURRENT_TIMESTAMP",
@@ -2501,13 +1478,6 @@
           "notNull": true,
           "primaryKey": false,
           "type": "varchar(100)"
-        },
-        "version": {
-          "default": 1,
-          "name": "version",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "integer"
         }
       },
       "compositePrimaryKeys": {},
@@ -2520,49 +1490,12 @@
               "expression": "is_active",
               "isExpression": false,
               "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "last_login_at",
-              "isExpression": false,
-              "nulls": "last"
             }
           ],
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
           "name": "active_users_idx",
-          "where": "deleted_at IS NULL",
-          "with": {}
-        },
-        "user_email_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "email",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": true,
-          "method": "btree",
-          "name": "user_email_idx",
-          "with": {}
-        },
-        "user_username_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "username",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": true,
-          "method": "btree",
-          "name": "user_username_idx",
           "with": {}
         },
         "users_role_idx": {
@@ -2570,12 +1503,6 @@
             {
               "asc": true,
               "expression": "role",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "created_at",
               "isExpression": false,
               "nulls": "last"
             }
@@ -2604,22 +1531,15 @@
         }
       }
     },
-    "public.waste_materials": {
+    "public.waste_inventory": {
       "checkConstraints": {},
       "columns": {
-        "category": {
-          "name": "category",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "waste_type",
-          "typeSchema": "public"
-        },
-        "composition": {
-          "default": "'{}'::jsonb",
-          "name": "composition",
+        "contamination_level": {
+          "default": 0,
+          "name": "contamination_level",
           "notNull": false,
           "primaryKey": false,
-          "type": "jsonb"
+          "type": "real"
         },
         "created_at": {
           "default": "CURRENT_TIMESTAMP",
@@ -2628,29 +1548,17 @@
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "created_by": {
-          "name": "created_by",
+        "date_collected": {
+          "name": "date_collected",
           "notNull": true,
-          "primaryKey": false,
-          "type": "uuid"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "notNull": false,
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "density_kg_per_m3": {
-          "name": "density_kg_per_m3",
+        "expiry_date": {
+          "name": "expiry_date",
           "notNull": false,
           "primaryKey": false,
-          "type": "numeric(8, 2)"
-        },
-        "description": {
-          "name": "description",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
+          "type": "timestamp with time zone"
         },
         "id": {
           "default": "gen_random_uuid()",
@@ -2659,25 +1567,11 @@
           "primaryKey": true,
           "type": "uuid"
         },
-        "is_public": {
-          "default": true,
-          "name": "is_public",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "name": {
-          "name": "name",
+        "location": {
+          "name": "location",
           "notNull": true,
           "primaryKey": false,
           "type": "varchar(100)"
-        },
-        "processing_difficulty": {
-          "default": 1,
-          "name": "processing_difficulty",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "smallint"
         },
         "properties": {
           "default": "'{}'::jsonb",
@@ -2686,12 +1580,18 @@
           "primaryKey": false,
           "type": "jsonb"
         },
-        "recyclability_score": {
-          "default": 0,
-          "name": "recyclability_score",
+        "quality_grade": {
+          "default": "'standard'",
+          "name": "quality_grade",
           "notNull": false,
           "primaryKey": false,
-          "type": "real"
+          "type": "varchar(20)"
+        },
+        "quantity_kg": {
+          "name": "quantity_kg",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "numeric(10, 3)"
         },
         "updated_at": {
           "default": "CURRENT_TIMESTAMP",
@@ -2705,33 +1605,60 @@
           "name": "version",
           "notNull": true,
           "primaryKey": false,
-          "type": "integer"
+          "type": "smallint"
+        },
+        "waste_type": {
+          "name": "waste_type",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "waste_type",
+          "typeSchema": "public"
         }
       },
       "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "waste_materials_created_by_users_id_fk": {
-          "columnsFrom": ["created_by"],
-          "columnsTo": ["id"],
-          "name": "waste_materials_created_by_users_id_fk",
-          "onDelete": "restrict",
-          "onUpdate": "no action",
-          "tableFrom": "waste_materials",
-          "tableTo": "users"
-        }
-      },
+      "foreignKeys": {},
       "indexes": {
-        "created_by_materials_idx": {
+        "collection_date_idx": {
           "columns": [
             {
               "asc": true,
-              "expression": "created_by",
+              "expression": "date_collected",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "collection_date_idx",
+          "with": {}
+        },
+        "location_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "location",
+              "isExpression": false,
+              "nulls": "last"
+            }
+          ],
+          "concurrently": false,
+          "isUnique": false,
+          "method": "btree",
+          "name": "location_idx",
+          "with": {}
+        },
+        "waste_type_idx": {
+          "columns": [
+            {
+              "asc": true,
+              "expression": "waste_type",
               "isExpression": false,
               "nulls": "last"
             },
             {
               "asc": true,
-              "expression": "category",
+              "expression": "quantity_kg",
               "isExpression": false,
               "nulls": "last"
             }
@@ -2739,69 +1666,12 @@
           "concurrently": false,
           "isUnique": false,
           "method": "btree",
-          "name": "created_by_materials_idx",
-          "with": {}
-        },
-        "materials_category_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "category",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "recyclability_score",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "materials_category_idx",
-          "with": {}
-        },
-        "materials_name_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "name",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "materials_name_idx",
-          "with": {}
-        },
-        "materials_public_idx": {
-          "columns": [
-            {
-              "asc": true,
-              "expression": "is_public",
-              "isExpression": false,
-              "nulls": "last"
-            },
-            {
-              "asc": true,
-              "expression": "category",
-              "isExpression": false,
-              "nulls": "last"
-            }
-          ],
-          "concurrently": false,
-          "isUnique": false,
-          "method": "btree",
-          "name": "materials_public_idx",
+          "name": "waste_type_idx",
           "with": {}
         }
       },
       "isRLSEnabled": false,
-      "name": "waste_materials",
+      "name": "waste_inventory",
       "policies": {},
       "schema": "",
       "uniqueConstraints": {}

@@ -1,30 +1,33 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "EventsAdapter", {
-    enumerable: true,
-    get: function() {
-        return EventsAdapter;
-    }
-});
-const _platformsocketio = require("@nestjs/platform-socket.io");
-const _expresssocketiosession = /*#__PURE__*/ _interop_require_default(require("express-socket.io-session"));
-function _interop_require_default(obj) {
-    return obj && obj.__esModule ? obj : {
-        default: obj
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
     };
-}
-let EventsAdapter = class EventsAdapter extends _platformsocketio.IoAdapter {
-    createIOServer(port, options) {
-        const server = super.createIOServer(port, options);
-        server.use(//@ts-expect-error
-        (0, _expresssocketiosession.default)(this.session, {}));
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+import { IoAdapter } from '@nestjs/platform-socket.io';
+import sharedsession from 'express-socket.io-session';
+var EventsAdapter = (function (_super) {
+    __extends(EventsAdapter, _super);
+    function EventsAdapter(session) {
+        var _this = _super.call(this) || this;
+        _this.session = session;
+        return _this;
+    }
+    EventsAdapter.prototype.createIOServer = function (port, options) {
+        var server = _super.prototype.createIOServer.call(this, port, options);
+        server.use(sharedsession(this.session, {}));
         return server;
-    }
-    constructor(session){
-        super(), this.session = session;
-    }
-};
-
+    };
+    return EventsAdapter;
+}(IoAdapter));
+export { EventsAdapter };
 //# sourceMappingURL=auth.adapter.js.map

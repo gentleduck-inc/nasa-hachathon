@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm'
 import {
   boolean,
   decimal,
-  foreignKey,
   index,
   integer,
   jsonb,
@@ -16,483 +15,303 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
-import { WASTE_ENUM } from './constants'
 
 // Enums
-export const userRoleEnum = pgEnum('user_role', ['admin', 'mission_commander', 'crew_member', 'engineer', 'scientist'])
-export const missionStatusEnum = pgEnum('mission_status', ['planning', 'active', 'completed', 'aborted'])
-export const wasteTypeEnum = pgEnum('waste_type', WASTE_ENUM)
+export const userRoleEnum = pgEnum('user_role', ['admin', 'operator', 'engineer', 'scientist'])
+export const wasteTypeEnum = pgEnum('waste_type', [
+  'food_packaging',
+  'clothing_fabric',
+  'metal_components',
+  'foam_insulation',
+  'plastic_containers',
+  'electronic_waste',
+  'organic_waste',
+  'paper_cardboard',
+])
 export const moduleStatusEnum = pgEnum('module_status', ['active', 'maintenance', 'broken', 'offline'])
-export const runStatusEnum = pgEnum('run_status', ['queued', 'running', 'completed', 'failed', 'cancelled'])
+export const runStatusEnum = pgEnum('run_status', ['queued', 'running', 'paused', 'completed', 'failed'])
 export const productTypeEnum = pgEnum('product_type', [
-  'brick',
-  'tile',
-  'utensil',
-  'container',
-  'tool',
-  'structural_component',
-  'insulation',
-  'filter',
-  'decorative_item',
+  'insulation_panel',
+  'storage_container',
   'spare_part',
+  'tool',
+  'structural_beam',
+  'protective_sheet',
+  'filter_component',
+  'building_brick',
 ])
 
 /**
- * Users - astronauts, engineers, mission control personnel
+ * System users - Mars facility operators
  */
 export const users = pgTable(
   'users',
   {
-    avatar_url: text('avatar_url'),
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
     email: varchar('email', { length: 255 }).notNull().unique(),
     first_name: varchar('first_name', { length: 100 }).notNull(),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
     is_active: boolean('is_active').default(true).notNull(),
-    last_login_at: timestamp('last_login_at', { withTimezone: true }),
     last_name: varchar('last_name', { length: 100 }).notNull(),
-    password_hash: varchar('password_hash', { length: 255 }).notNull(),
-    role: userRoleEnum('role').default('crew_member').notNull(),
-    settings: jsonb('settings').default(sql`'{}'::jsonb`),
+    role: userRoleEnum('role').default('operator').notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
     username: varchar('username', { length: 100 }).notNull().unique(),
-    version: integer('version').default(1).notNull(),
   },
-  (table) => [
-    index('active_users_idx').on(table.is_active, table.last_login_at).where(sql`deleted_at IS NULL`),
-    uniqueIndex('user_email_idx').on(table.email),
-    uniqueIndex('user_username_idx').on(table.username),
-    index('users_role_idx').on(table.role, table.created_at),
-  ],
+  (table) => [index('users_role_idx').on(table.role), index('active_users_idx').on(table.is_active)],
 )
 
 /**
- * OTP codes
+ * Waste materials currently available for processing
  */
-export const otpCodes = pgTable(
-  'otp_codes',
+export const wasteInventory = pgTable(
+  'waste_inventory',
   {
-    code: varchar('code', { length: 6 }).notNull(),
+    contamination_level: real('contamination_level').default(0), // 0-1 scale
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+    date_collected: timestamp('date_collected', { withTimezone: true }).notNull(),
+    expiry_date: timestamp('expiry_date', { withTimezone: true }), // For organic materials
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    is_active: boolean('is_active').default(true).notNull(),
+    location: varchar('location', { length: 100 }).notNull(), // Storage bay, processing area, etc.
+    properties: jsonb('properties').default(sql`'{}'::jsonb`), // Material-specific properties
+    quality_grade: varchar('quality_grade', { length: 20 }).default('standard'), // pristine, standard, degraded
+    quantity_kg: decimal('quantity_kg', { precision: 10, scale: 3 }).notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    user_id: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    version: smallint('version').default(1).notNull(),
+    waste_type: wasteTypeEnum('waste_type').notNull(),
   },
   (table) => [
-    index('active_codes_idx').on(table.is_active, table.expires_at).where(sql`deleted_at IS NULL`),
-    index('user_codes_idx').on(table.user_id, table.created_at),
+    index('waste_type_idx').on(table.waste_type, table.quantity_kg),
+    index('location_idx').on(table.location),
+    index('collection_date_idx').on(table.date_collected),
   ],
 )
 
 /**
- * API keys and session tokens
- */
-export const apiKeys = pgTable(
-  'api_keys',
-  {
-    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    expires_at: timestamp('expires_at', { withTimezone: true }),
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    is_active: boolean('is_active').default(true).notNull(),
-    key_hash: varchar('key_hash', { length: 255 }).notNull().unique(),
-    last_used_at: timestamp('last_used_at', { withTimezone: true }),
-    name: varchar('name', { length: 100 }).notNull(),
-    permissions: jsonb('permissions').default(sql`'[]'::jsonb`),
-    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    user_id: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-  },
-  (table) => [
-    index('active_keys_idx').on(table.is_active, table.expires_at).where(sql`deleted_at IS NULL`),
-    uniqueIndex('api_key_hash_idx').on(table.key_hash),
-    index('user_keys_idx').on(table.user_id, table.created_at),
-  ],
-)
-
-/**
- * Mars missions - each mission has its own waste profile and timeline
- */
-export const missions = pgTable(
-  'missions',
-  {
-    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    created_by: uuid('created_by')
-      .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
-    crew_size: smallint('crew_size').notNull().default(8),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    description: text('description'),
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    landing_date: timestamp('landing_date', { withTimezone: true }),
-    landing_site: varchar('landing_site', { length: 100 }).default('Jezero Crater'),
-    launch_date: timestamp('launch_date', { withTimezone: true }),
-    mission_duration_days: integer('mission_duration_days').notNull().default(1095),
-    name: varchar('name', { length: 200 }).notNull(),
-    return_date: timestamp('return_date', { withTimezone: true }),
-    settings: jsonb('settings').default(sql`'{}'::jsonb`),
-    status: missionStatusEnum('status').default('planning').notNull(),
-    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    version: integer('version').default(1).notNull(),
-  },
-  (table) => [
-    index('active_missions_idx').on(table.status, table.landing_date).where(sql`deleted_at IS NULL`),
-    index('status_missions_idx').on(table.status, table.launch_date),
-    index('created_by_missions_idx').on(table.created_by, table.created_at),
-  ],
-)
-
-/**
- * Mission crew assignments
- */
-export const missionCrew = pgTable(
-  'mission_crew',
-  {
-    assigned_at: timestamp('assigned_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    mission_id: uuid('mission_id')
-      .notNull()
-      .references(() => missions.id, { onDelete: 'cascade' }),
-    removed_at: timestamp('removed_at', { withTimezone: true }),
-    role: userRoleEnum('role').notNull(),
-    specialization: varchar('specialization', { length: 100 }),
-    user_id: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-  },
-  (table) => [
-    uniqueIndex('mission_crew_unique_idx').on(table.mission_id, table.user_id).where(sql`removed_at IS NULL`),
-    index('user_missions_idx').on(table.user_id, table.assigned_at),
-  ],
-)
-
-/**
- * Waste materials catalog - defines what waste types we can process
- */
-export const wasteMaterials = pgTable(
-  'waste_materials',
-  {
-    category: wasteTypeEnum('category').notNull(),
-    composition: jsonb('composition').default(sql`'{}'::jsonb`),
-    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    density_kg_per_m3: decimal('density_kg_per_m3', { precision: 8, scale: 2 }),
-    description: text('description'),
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    name: varchar('name', { length: 100 }).notNull(),
-    processing_difficulty: smallint('processing_difficulty').default(1),
-    properties: jsonb('properties').default(sql`'{}'::jsonb`),
-    recyclability_score: real('recyclability_score').default(0),
-    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    version: integer('version').default(1).notNull(),
-  },
-  (table) => [
-    index('materials_category_idx').on(table.category, table.recyclability_score),
-    index('materials_name_idx').on(table.name),
-  ],
-)
-
-/**
- * Processing modules - equipment that transforms waste into products
+ * Processing equipment/modules
  */
 export const processingModules = pgTable(
   'processing_modules',
   {
-    capabilities: jsonb('capabilities').default(sql`'{}'::jsonb`),
+    capabilities: jsonb('capabilities').default(sql`'{}'::jsonb`), // What materials/operations it supports
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    created_by: uuid('created_by')
-      .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
-    crew_time_minutes_per_kg: decimal('crew_time_minutes_per_kg', { precision: 6, scale: 2 }).default('0'),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    description: text('description'),
-    efficiency_rating: real('efficiency_rating').default(1.0),
+    current_recipe_id: uuid('current_recipe_id'), // Currently running recipe
+    efficiency_rating: real('efficiency_rating').default(1.0), // 0-1 scale
+    estimated_completion: timestamp('estimated_completion', { withTimezone: true }),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    is_public: boolean('is_public').default(true).notNull(),
-    maintenance_hours_per_day: decimal('maintenance_hours_per_day', { precision: 4, scale: 2 }).default('0'),
-    module_type: varchar('module_type', { length: 50 }).notNull(),
+    maintenance_hours_remaining: integer('maintenance_hours_remaining').default(1000),
+    module_type: varchar('module_type', { length: 50 }).notNull(), // shredder, extruder, printer, etc.
     name: varchar('name', { length: 100 }).notNull(),
     power_consumption_kw: decimal('power_consumption_kw', { precision: 8, scale: 2 }).notNull(),
     status: moduleStatusEnum('status').default('active').notNull(),
     throughput_kg_per_hour: decimal('throughput_kg_per_hour', { precision: 8, scale: 2 }).notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    version: integer('version').default(1).notNull(),
   },
   (table) => [
-    index('modules_type_idx').on(table.module_type, table.efficiency_rating),
-    index('status_modules_idx').on(table.status, table.throughput_kg_per_hour),
-    index('modules_public_idx').on(table.is_public, table.module_type),
-    index('created_by_modules_idx').on(table.created_by, table.module_type),
+    index('module_status_idx').on(table.status),
+    index('module_type_idx').on(table.module_type),
+    index('processing_modules_efficiency_idx').on(table.efficiency_rating),
   ],
 )
 
 /**
- * Processing recipes - how to convert specific waste materials into products
+ * Processing recipes - how to convert waste into products
  */
 export const processingRecipes = pgTable(
   'processing_recipes',
   {
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    created_by: uuid('created_by')
-      .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
-    crew_time_minutes: integer('crew_time_minutes').default(0),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    created_by: uuid('created_by').references(() => users.id),
     description: text('description'),
     energy_required_kwh: decimal('energy_required_kwh', { precision: 8, scale: 3 }).notNull(),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    inputs: jsonb('inputs').notNull(),
-    is_public: boolean('is_public').default(true).notNull(),
+    input_materials: jsonb('input_materials').notNull(), // {"food_packaging": 5.0, "metal_components": 2.0}
+    is_active: boolean('is_active').default(true),
     name: varchar('name', { length: 200 }).notNull(),
-    output_product_type: productTypeEnum('output_product_type').notNull(),
-    outputs: jsonb('outputs').notNull(),
-    process_steps: jsonb('process_steps').notNull(),
+    output_products: jsonb('output_products').notNull(), // {"storage_container": 6.5}
+    process_steps: jsonb('process_steps').notNull(), // Detailed processing instructions
     processing_time_minutes: integer('processing_time_minutes').notNull(),
-    quality_score: real('quality_score').default(1.0),
+    quality_score: real('quality_score').default(1.0), // Product quality 0-1
+    required_modules: jsonb('required_modules').notNull(), // ["shredder", "extruder"]
     updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    version: integer('version').default(1).notNull(),
-    yield_percentage: real('yield_percentage').default(0.8),
+    yield_percentage: real('yield_percentage').default(0.85), // Expected output vs input
   },
   (table) => [
-    index('recipes_efficiency_idx').on(table.yield_percentage, table.energy_required_kwh),
-    index('recipes_product_type_idx').on(table.output_product_type, table.quality_score),
-    index('recipes_public_idx').on(table.is_public, table.output_product_type),
-    index('created_by_recipes_idx').on(table.created_by, table.output_product_type),
+    index('recipe_active_idx').on(table.is_active),
+    index('recipe_efficiency_idx').on(table.yield_percentage, table.energy_required_kwh),
+    index('created_by_idx').on(table.created_by),
   ],
 )
 
 /**
- * Recycling scenarios - predefined scenarios for automated recycling processes
+ * Automated processing runs
  */
-export const recyclingScenarios = pgTable(
-  'recycling_scenarios',
+export const processingRuns = pgTable(
+  'processing_runs',
   {
-    automated_flow: jsonb('automated_flow').notNull(),
-    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    created_by: uuid('created_by')
-      .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    description: text('description'),
-    estimated_energy_kwh: decimal('estimated_energy_kwh', { precision: 8, scale: 3 }),
-    estimated_time_minutes: integer('estimated_time_minutes'),
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    input_materials: jsonb('input_materials').notNull(),
-    is_public: boolean('is_public').default(true).notNull(),
-    name: varchar('name', { length: 200 }).notNull(),
-    output_products: jsonb('output_products').notNull(),
-    recipe_ids: jsonb('recipe_ids').default(sql`'[]'::jsonb`),
-    scenario_type: varchar('scenario_type', { length: 50 }).notNull(),
-    success_rate: real('success_rate').default(1.0),
-    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    version: integer('version').default(1).notNull(),
-  },
-  (table) => [
-    index('scenarios_type_idx').on(table.scenario_type, table.success_rate),
-    index('scenarios_public_idx').on(table.is_public, table.scenario_type),
-    index('created_by_scenarios_idx').on(table.created_by, table.scenario_type),
-  ],
-)
-
-/**
- * Simulation runs - each optimization/simulation attempt
- */
-export const simulationRuns = pgTable(
-  'simulation_runs',
-  {
+    actual_outputs: jsonb('actual_outputs'), // Actual products created (when completed)
     completed_at: timestamp('completed_at', { withTimezone: true }),
-    config: jsonb('config').notNull(),
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    created_by: uuid('created_by')
-      .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    description: text('description'),
+    created_by: uuid('created_by').references(() => users.id),
+    energy_consumed_kwh: decimal('energy_consumed_kwh', { precision: 8, scale: 3 }),
     error_message: text('error_message'),
+    estimated_outputs: jsonb('estimated_outputs').notNull(), // Expected products
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    mission_id: uuid('mission_id').references(() => missions.id, { onDelete: 'cascade' }),
+    input_quantities: jsonb('input_quantities').notNull(), // Actual materials used
+    module_id: uuid('module_id')
+      .notNull()
+      .references(() => processingModules.id),
     name: varchar('name', { length: 200 }).notNull(),
+    operator_notes: text('operator_notes'),
     progress_percent: smallint('progress_percent').default(0),
-    results: jsonb('results').default(sql`'{}'::jsonb`),
-    run_type: varchar('run_type', { length: 50 }).notNull(),
-    scenario_id: uuid('scenario_id').references(() => recyclingScenarios.id, { onDelete: 'set null' }),
+    quality_check_passed: boolean('quality_check_passed'),
+    recipe_id: uuid('recipe_id')
+      .notNull()
+      .references(() => processingRecipes.id),
     started_at: timestamp('started_at', { withTimezone: true }),
     status: runStatusEnum('status').default('queued').notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    version: integer('version').default(1).notNull(),
   },
   (table) => [
-    index('active_runs_idx').on(table.status, table.progress_percent).where(sql`deleted_at IS NULL`),
-    index('mission_runs_idx').on(table.mission_id, table.created_at),
-    index('status_runs_idx').on(table.status, table.created_at),
-    index('user_runs_idx').on(table.created_by, table.created_at),
-    index('scenario_runs_idx').on(table.scenario_id, table.created_at),
+    index('run_status_idx').on(table.status),
+    index('run_progress_idx').on(table.progress_percent),
+    index('recipe_runs_idx').on(table.recipe_id),
+    index('module_runs_idx').on(table.module_id),
+    index('completion_date_idx').on(table.completed_at),
   ],
 )
 
 /**
- * Products created from recycled waste
+ * Produced items inventory
  */
-export const products = pgTable(
-  'products',
+export const productInventory = pgTable(
+  'product_inventory',
   {
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    creation_date: timestamp('creation_date', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    description: text('description'),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    is_in_use: boolean('is_in_use').default(false),
-    mass_kg: decimal('mass_kg', { precision: 8, scale: 3 }).notNull(),
-    mission_id: uuid('mission_id').references(() => missions.id, { onDelete: 'cascade' }),
-    name: varchar('name', { length: 200 }).notNull(),
+    is_available: boolean('is_available').default(true), // Available for use
+    location: varchar('location', { length: 100 }).notNull(),
     product_type: productTypeEnum('product_type').notNull(),
-    properties: jsonb('properties').default(sql`'{}'::jsonb`),
+    production_run_id: uuid('production_run_id').references(() => processingRuns.id),
+    properties: jsonb('properties').default(sql`'{}'::jsonb`), // Product-specific properties
     quality_score: real('quality_score').default(1.0),
-    recipe_id: uuid('recipe_id').references(() => processingRecipes.id, { onDelete: 'set null' }),
-    simulation_run_id: uuid('simulation_run_id').references(() => simulationRuns.id, { onDelete: 'cascade' }),
-    source_materials: jsonb('source_materials').notNull(),
+    quantity: integer('quantity').notNull(),
+    reserved_quantity: integer('reserved_quantity').default(0), // Reserved for specific purposes
+    total_mass_kg: decimal('total_mass_kg', { precision: 10, scale: 3 }).notNull(),
+    unit_mass_kg: decimal('unit_mass_kg', { precision: 8, scale: 3 }),
     updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    version: integer('version').default(1).notNull(),
-    volume_m3: decimal('volume_m3', { precision: 8, scale: 4 }),
   },
   (table) => [
-    index('mission_products_idx').on(table.mission_id, table.product_type),
-    index('run_products_idx').on(table.simulation_run_id, table.creation_date),
-    index('type_products_idx').on(table.product_type, table.quality_score),
+    index('product_type_idx').on(table.product_type),
+    index('availability_idx').on(table.is_available, table.quantity),
+    index('location_products_idx').on(table.location),
+    index('production_run_idx').on(table.production_run_id),
   ],
 )
 
 /**
- * Comments and notes on missions, runs, products, etc.
+ * Resource consumption tracking
  */
-export const comments = pgTable(
-  'comments',
+export const resourceUsage = pgTable(
+  'resource_usage',
   {
-    attachments: jsonb('attachments').default(sql`'[]'::jsonb`),
-    author_id: uuid('author_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    content: text('content').notNull(),
+    cost_estimate: decimal('cost_estimate', { precision: 10, scale: 2 }), // Operational cost
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    entity_id: uuid('entity_id').notNull(),
-    entity_type: varchar('entity_type', { length: 50 }).notNull(),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    parent_comment_id: uuid('parent_comment_id'),
-    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    version: integer('version').default(1).notNull(),
+    module_id: uuid('module_id').references(() => processingModules.id),
+    processing_run_id: uuid('processing_run_id').references(() => processingRuns.id),
+    quantity_used: decimal('quantity_used', { precision: 10, scale: 3 }).notNull(),
+    resource_type: varchar('resource_type', { length: 50 }).notNull(), // power, water, crew_time
+    unit: varchar('unit', { length: 20 }).notNull(), // kwh, liters, hours
+    usage_date: timestamp('usage_date', { withTimezone: true }).notNull(),
   },
   (table) => [
-    index('entity_comments_idx').on(table.entity_type, table.entity_id, table.created_at),
-    index('author_comments_idx').on(table.author_id, table.created_at),
-    index('parent_comments_idx').on(table.parent_comment_id, table.created_at),
-    foreignKey({
-      columns: [table.parent_comment_id],
-      foreignColumns: [table.id],
-      name: 'comments_parent_comment_fk',
-    }).onDelete('cascade'),
+    index('resource_type_idx').on(table.resource_type),
+    index('usage_date_idx').on(table.usage_date),
+    index('processing_run_usage_idx').on(table.processing_run_id),
+    index('module_usage_idx').on(table.module_id),
   ],
 )
 
 /**
- * File attachments for documentation, images, 3D models, etc.
+ * System alerts and notifications
  */
-export const attachments = pgTable(
-  'attachments',
+export const systemAlerts = pgTable(
+  'system_alerts',
   {
-    checksum_sha256: varchar('checksum_sha256', { length: 64 }),
+    alert_type: varchar('alert_type', { length: 50 }).notNull(), // maintenance, resource_low, error, etc.
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    deleted_at: timestamp('deleted_at', { withTimezone: true }),
-    filename: varchar('filename', { length: 255 }).notNull(),
+    entity_id: uuid('entity_id'), // Reference to the related entity
+    entity_type: varchar('entity_type', { length: 50 }), // module, recipe, run, etc.
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    is_public: boolean('is_public').default(false),
-    metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
-    mime_type: varchar('mime_type', { length: 100 }).notNull(),
-    original_filename: varchar('original_filename', { length: 255 }).notNull(),
-    size_bytes: integer('size_bytes').notNull(),
-    storage_path: text('storage_path').notNull(),
-    storage_provider: varchar('storage_provider', { length: 50 }).default('local'),
-    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    uploaded_by: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+    is_resolved: boolean('is_resolved').default(false),
+    message: text('message').notNull(),
+    resolution_notes: text('resolution_notes'),
+    resolved_at: timestamp('resolved_at', { withTimezone: true }),
+    resolved_by: uuid('resolved_by').references(() => users.id),
+    severity: varchar('severity', { length: 20 }).notNull(), // critical, warning, info
+    title: varchar('title', { length: 200 }).notNull(),
   },
   (table) => [
-    uniqueIndex('attachments_checksum_idx').on(table.checksum_sha256).where(sql`checksum_sha256 IS NOT NULL`),
-    index('attachments_type_idx').on(table.mime_type, table.size_bytes),
-    index('uploader_attachments_idx').on(table.uploaded_by, table.created_at),
+    index('alert_severity_idx').on(table.severity),
+    index('alert_resolved_idx').on(table.is_resolved),
+    index('alert_type_idx').on(table.alert_type),
+    index('alert_entity_idx').on(table.entity_type, table.entity_id),
   ],
 )
 
 /**
- * Audit log - tracks all significant actions in the system
+ * Dashboard metrics and KPIs
  */
-export const auditLogs = pgTable(
-  'audit_logs',
+export const dailyMetrics = pgTable(
+  'daily_metrics',
   {
-    action: varchar('action', { length: 100 }).notNull(),
-    changes: jsonb('changes').default(sql`'{}'::jsonb`),
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    entity_id: uuid('entity_id').notNull(),
-    entity_type: varchar('entity_type', { length: 50 }).notNull(),
+    energy_consumed_kwh: decimal('energy_consumed_kwh', { precision: 10, scale: 3 }).default('0'),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    ip_address: varchar('ip_address', { length: 45 }),
-    user_agent: text('user_agent'),
-    user_id: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    metric_date: timestamp('metric_date', { withTimezone: true }).notNull(),
+    module_uptime_percent: real('module_uptime_percent').default(0),
+    processing_efficiency: real('processing_efficiency').default(0), // Actual vs theoretical output
+    products_by_type: jsonb('products_by_type').default(sql`'{}'::jsonb`),
+    products_created_count: integer('products_created_count').default(0),
+    quality_score_average: real('quality_score_average').default(0),
+    waste_processed_kg: decimal('waste_processed_kg', { precision: 10, scale: 3 }).default('0'),
+    waste_types_processed: jsonb('waste_types_processed').default(sql`'{}'::jsonb`),
   },
   (table) => [
-    index('entity_actions_idx').on(table.entity_type, table.entity_id, table.created_at),
-    index('audit_logs_time_partition_idx').on(table.created_at),
-    index('user_actions_idx').on(table.user_id, table.created_at),
+    uniqueIndex('daily_metrics_date_idx').on(table.metric_date),
+    index('daily_metrics_efficiency_idx').on(table.processing_efficiency),
+    index('waste_processed_idx').on(table.waste_processed_kg),
   ],
 )
 
 /**
- * Settings - system and user preferences stored as key-value pairs
+ * Maintenance schedules and logs
  */
-export const settings = pgTable(
-  'settings',
+export const maintenanceRecords = pgTable(
+  'maintenance_records',
   {
-    category: varchar('category', { length: 50 }).default('general'),
+    completed_date: timestamp('completed_date', { withTimezone: true }),
+    cost_estimate: decimal('cost_estimate', { precision: 10, scale: 2 }),
     created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
     description: text('description'),
+    duration_hours: decimal('duration_hours', { precision: 4, scale: 1 }),
+    efficiency_after: real('efficiency_after'),
+    efficiency_before: real('efficiency_before'),
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    is_system: boolean('is_system').default(false),
-    key: varchar('key', { length: 100 }).notNull(),
-    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    user_id: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
-    value: jsonb('value').notNull(),
+    maintenance_type: varchar('maintenance_type', { length: 50 }).notNull(), // preventive, corrective, emergency
+    module_id: uuid('module_id')
+      .notNull()
+      .references(() => processingModules.id),
+    notes: text('notes'),
+    parts_replaced: jsonb('parts_replaced').default(sql`'[]'::jsonb`),
+    performed_by: uuid('performed_by').references(() => users.id),
+    scheduled_date: timestamp('scheduled_date', { withTimezone: true }),
+    status: varchar('status', { length: 20 }).default('scheduled'), // scheduled, in_progress, completed, cancelled
   },
   (table) => [
-    index('settings_category_idx').on(table.category, table.is_system),
-    uniqueIndex('user_settings_unique_idx').on(table.user_id, table.key).where(sql`user_id IS NOT NULL`),
-    uniqueIndex('system_settings_unique_idx').on(table.key).where(sql`user_id IS NULL AND is_system = true`),
-  ],
-)
-
-/**
- * Full-text search index for searchable content
- */
-export const searchIndex = pgTable(
-  'search_index',
-  {
-    content: text('content').notNull(),
-    created_at: timestamp('created_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    entity_id: uuid('entity_id').notNull(),
-    entity_type: varchar('entity_type', { length: 50 }).notNull(),
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    search_vector: text('search_vector'),
-    tags: jsonb('tags').default(sql`'[]'::jsonb`),
-    title: text('title').notNull(),
-    updated_at: timestamp('updated_at', { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-  },
-  (table) => [
-    uniqueIndex('entity_search_unique_idx').on(table.entity_type, table.entity_id),
-    index('search_tags_idx').on(table.tags),
+    index('module_maintenance_idx').on(table.module_id),
+    index('maintenance_date_idx').on(table.scheduled_date),
+    index('maintenance_status_idx').on(table.status),
+    index('maintenance_type_idx').on(table.maintenance_type),
   ],
 )
