@@ -4,7 +4,7 @@ import { ProcessingModulesService } from './processing_modules.service'
 import { CreateModuleDto, MaintenanceDto, ModuleFiltersDto, UpdateModuleDto } from './processing_modules.types'
 
 @UseGuards(AuthGuard)
-@Controller('api/modules')
+@Controller('/modules')
 export class ProcessingModulesController {
   constructor(private readonly service: ProcessingModulesService) {}
 

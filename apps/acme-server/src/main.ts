@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import type { NestExpressApplication } from '@nestjs/platform-express'
+import { IoAdapter } from '@nestjs/platform-socket.io'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { RedisStore } from 'connect-redis'
 import session from 'express-session'
@@ -42,6 +43,8 @@ async function bootstrap() {
   })
   app.use(_session)
   app.useWebSocketAdapter(new EventsAdapter(_session))
+
+  app.useWebSocketAdapter(new IoAdapter(app))
 
   // Swagger
   patchNestJsSwagger()

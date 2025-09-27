@@ -33,35 +33,48 @@ export function WasteInventoryTable({ data, isLoading }: WasteInventoryTableProp
   const columns = React.useMemo<ColumnDef<WasteInventory>[]>(
     () => [
       {
-        accessorKey: 'name',
-        cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div>,
-        header: 'Name',
+        accessorKey: 'waste_type',
+        cell: ({ row }) => (
+          <div className="font-medium capitalize">{(row.getValue('waste_type') as string).replace('_', ' ')}</div>
+        ),
+        header: 'Waste Type',
       },
       {
-        accessorKey: 'category',
-        header: 'Category',
+        accessorKey: 'quantity_kg',
+        cell: ({ row }) => <div>{row.getValue('quantity_kg') as string} kg</div>,
+        header: 'Quantity',
       },
       {
-        accessorKey: 'description',
-        cell: ({ row }) => <div className="max-w-[300px] truncate">{row.getValue('description')}</div>,
-        header: 'Description',
+        accessorKey: 'location',
+        cell: ({ row }) => <div className="max-w-[200px] truncate">{row.getValue('location') as string}</div>,
+        header: 'Location',
       },
       {
-        accessorKey: 'density_kg_per_m3',
-        header: 'Density (kg/m³)',
+        accessorKey: 'quality_grade',
+        cell: ({ row }) => {
+          const grade = row.getValue('quality_grade') as string
+          const colorClass =
+            {
+              degraded: 'text-red-600',
+              pristine: 'text-green-600',
+              standard: 'text-yellow-600',
+            }[grade] || 'text-gray-600'
+          return <div className={`capitalize ${colorClass}`}>{grade}</div>
+        },
+        header: 'Quality',
       },
       {
-        accessorKey: 'processing_difficulty',
-        header: 'Difficulty',
+        accessorKey: 'contamination_level',
+        cell: ({ row }) => {
+          const level = row.getValue('contamination_level') as number
+          return <div>{(level * 100).toFixed(1)}%</div>
+        },
+        header: 'Contamination',
       },
       {
-        accessorKey: 'recyclability_score',
-        header: 'Recyclability',
-      },
-      {
-        accessorKey: 'created_at',
-        cell: ({ row }) => new Date(row.getValue('created_at')).toLocaleDateString(),
-        header: 'Created At',
+        accessorKey: 'date_collected',
+        cell: ({ row }) => new Date(row.getValue('date_collected') as string).toLocaleDateString(),
+        header: 'Collected',
       },
       {
         cell: ({ row }) => {
@@ -76,7 +89,7 @@ export function WasteInventoryTable({ data, isLoading }: WasteInventoryTableProp
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem>
-                  <WasteInventoryEditButton id={material.id} />
+                  <WasteInventoryEditButton data={material} />
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => deleteMutation.mutate(material.id)}>Delete</DropdownMenuItem>
               </DropdownMenuContent>

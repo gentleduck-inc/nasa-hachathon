@@ -4,7 +4,38 @@ import { Server, Socket } from 'socket.io'
 import { AuthGuard } from '~/auth/auth.guard'
 import { SOCKET_NAMESPACE, SocketEvents } from './socket.constants'
 
-@WebSocketGateway({ cors: { credentials: true, origin: true }, namespace: SOCKET_NAMESPACE })
+@WebSocketGateway({
+  allowEIO3: true, // For Socket.IO v3 compatibility
+  // namespace: SOCKET_NAMESPACE,
+  cors: {
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    methods: ['GET', 'POST'],
+    origin: (origin, callback) => {
+      // Allow all origins in development
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true)
+      }
+
+      // In production, only allow specific origins
+      const allowedOrigins = [
+        'http://localhost:3001',
+        'http://localhost:3000',
+        'http://127.0.0.1:3001',
+        'http://127.0.0.1:3000',
+        'http://domain:3001',
+      ]
+
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('vercel.app')) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+  },
+  namespace: '/', // default
+  transports: ['websocket', 'polling'],
+})
 @UseGuards(AuthGuard)
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

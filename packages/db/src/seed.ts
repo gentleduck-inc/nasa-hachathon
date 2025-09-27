@@ -1,500 +1,707 @@
 import { db } from './db'
 import {
-  apiKeys,
-  attachments,
-  auditLogs,
-  comments,
-  missionCrew,
-  missions,
+  dailyMetrics,
+  maintenanceRecords,
   processingModules,
   processingRecipes,
-  products,
-  searchIndex,
-  settings,
-  simulationRuns,
+  processingRuns,
+  productInventory,
+  resourceUsage,
+  systemAlerts,
   users,
-  wasteMaterials,
+  wasteInventory,
 } from './tables'
 import type {
-  NewApiKey,
-  NewAttachment,
-  NewAuditLog,
-  NewComment,
-  NewMission,
-  NewMissionCrew,
+  NewDailyMetric,
+  NewMaintenanceRecord,
   NewProcessingModule,
   NewProcessingRecipe,
-  NewProduct,
-  NewSearchIndex,
-  NewSetting,
-  NewSimulationRun,
+  NewProcessingRun,
+  NewProductInventory,
+  NewResourceUsage,
+  NewSystemAlert,
   NewUser,
-  NewWasteMaterial,
+  NewWasteInventory,
 } from './types'
 
-// Organizations
-const orgData: NewOrganization[] = [
-  {
-    description: 'Leading space exploration agency focused on Mars colonization.',
-    id: '01234567-89ab-cdef-0123-456789abcdef',
-    name: 'NASA',
-    settings: { default_mission_duration: 1095, waste_recycling_target: 95 },
-    slug: 'nasa',
-  },
-  {
-    description: 'Private aerospace company pioneering Mars transportation.',
-    id: '11234567-89ab-cdef-0123-456789abcdef',
-    name: 'SpaceX',
-    settings: { default_mission_duration: 730, waste_recycling_target: 98 },
-    slug: 'spacex',
-  },
-]
-
-// Users
+// ========== USERS ==========
 const userData: NewUser[] = [
   {
-    email: 'scott.kelly@nasa.gov',
-    first_name: 'Scott',
-    id: '01111111-89ab-cdef-0123-456789abcdef',
-    last_name: 'Kelly',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
+    email: 'commander.martinez@marsbase.space',
+    first_name: 'Elena',
+    id: '01234567-89ab-cdef-0123-456789abcdef',
+    is_active: true,
+    last_name: 'Martinez',
     password_hash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewMfKEfQnMCgxBJ2',
-    username: 'commander.kelly',
+    settings: {
+      dashboard: { default_view: 'operations' },
+      notifications: { alerts: true, email: true },
+      preferences: { timezone: 'UTC-8' },
+    },
+    username: 'commander.martinez',
   },
   {
-    email: 'mark.watney@nasa.gov',
-    first_name: 'Mark',
-    id: '02222222-89ab-cdef-0123-456789abcdef',
-    last_name: 'Watney',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    password_hash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewMfKEfQnMCgxBJ2',
-    username: 'dr.watney',
-  },
-  {
-    email: 'lisa.chen@spacex.com',
-    first_name: 'Lisa',
-    id: '04444444-89ab-cdef-0123-456789abcdef',
+    email: 'engineer.chen@marsbase.space',
+    first_name: 'David',
+    id: '11234567-89ab-cdef-0123-456789abcdef',
+    is_active: true,
     last_name: 'Chen',
-    organization_id: '11234567-89ab-cdef-0123-456789abcdef',
     password_hash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewMfKEfQnMCgxBJ2',
-    username: 'captain.chen',
+    settings: {
+      dashboard: { default_view: 'maintenance' },
+      notifications: { alerts: true, email: true },
+      preferences: { timezone: 'UTC-8' },
+    },
+    username: 'engineer.chen',
+  },
+  {
+    email: 'scientist.kim@marsbase.space',
+    first_name: 'Dr. Sarah',
+    id: '21234567-89ab-cdef-0123-456789abcdef',
+    is_active: true,
+    last_name: 'Kim',
+    password_hash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewMfKEfQnMCgxBJ2',
+    settings: {
+      dashboard: { default_view: 'research' },
+      notifications: { alerts: false, email: true },
+      preferences: { timezone: 'UTC-8' },
+    },
+    username: 'scientist.kim',
+  },
+  {
+    email: 'operator.singh@marsbase.space',
+    first_name: 'Raj',
+    id: '31234567-89ab-cdef-0123-456789abcdef',
+    is_active: true,
+    last_name: 'Singh',
+    password_hash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewMfKEfQnMCgxBJ2',
+    settings: {
+      dashboard: { default_view: 'processing' },
+      notifications: { alerts: true, email: false },
+      preferences: { timezone: 'UTC-8' },
+    },
+    username: 'operator.singh',
   },
 ]
 
-// User Roles
-const roleData: NewUserRole[] = [
+// ========== WASTE INVENTORY ==========
+const wasteData: NewWasteInventory[] = [
   {
-    granted_by: '01111111-89ab-cdef-0123-456789abcdef',
-    role: 'mission_commander',
-    user_id: '01111111-89ab-cdef-0123-456789abcdef',
-  },
-  {
-    granted_by: '01111111-89ab-cdef-0123-456789abcdef',
-    role: 'scientist',
-    user_id: '02222222-89ab-cdef-0123-456789abcdef',
-  },
-  {
-    granted_by: '04444444-89ab-cdef-0123-456789abcdef',
-    role: 'mission_commander',
-    user_id: '04444444-89ab-cdef-0123-456789abcdef',
-  },
-]
-
-// API Keys
-const apiKeyData: NewApiKey[] = [
-  {
-    expires_at: new Date('2026-03-15T00:00:00Z'),
-    key_hash: '$2b$12$8K1p3D0E/c.c.KOwO5R5w.bQf3JRKjxF8w1QsqJ4wDWlaxg7zOEG2',
-    name: 'Mission Control Dashboard',
-    permissions: ['read:missions', 'write:simulation_runs'],
-    user_id: '01111111-89ab-cdef-0123-456789abcdef',
-  },
-  {
-    expires_at: new Date('2026-06-30T00:00:00Z'),
-    key_hash: '$2b$12$9L2q4E1F/d.d.LPxP6S6x.cRg4KSLkyG9x2RtrK5xEXmbyh8aOFH3',
-    name: 'Research Station API',
-    permissions: ['read:waste_materials', 'write:processing_recipes'],
-    user_id: '02222222-89ab-cdef-0123-456789abcdef',
-  },
-]
-
-// Missions
-const missionData: NewMission[] = [
-  {
-    crew_size: 6,
-    description: 'First Mars research station focused on sustainable living.',
-    id: '10000000-89ab-cdef-0123-456789abcdef',
-    landing_date: new Date('2025-08-22T14:30:00Z'),
-    name: 'Artemis Mars Base',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    status: 'active',
-  },
-  {
-    crew_size: 8,
-    description: 'Mars colonization mission with recycling facilities.',
-    id: '20000000-89ab-cdef-0123-456789abcdef',
-    landing_date: new Date('2025-07-03T16:45:00Z'),
-    name: 'Mars City Foundation',
-    organization_id: '11234567-89ab-cdef-0123-456789abcdef',
-    status: 'active',
-  },
-]
-
-// Mission Crew
-const crewData: NewMissionCrew[] = [
-  {
-    mission_id: '10000000-89ab-cdef-0123-456789abcdef',
-    role: 'mission_commander',
-    specialization: 'Mission Operations',
-    user_id: '01111111-89ab-cdef-0123-456789abcdef',
-  },
-  {
-    mission_id: '10000000-89ab-cdef-0123-456789abcdef',
-    role: 'scientist',
-    specialization: 'Botanical Engineering',
-    user_id: '02222222-89ab-cdef-0123-456789abcdef',
-  },
-  {
-    mission_id: '20000000-89ab-cdef-0123-456789abcdef',
-    role: 'mission_commander',
-    specialization: 'Colony Operations',
-    user_id: '04444444-89ab-cdef-0123-456789abcdef',
-  },
-]
-
-// Waste Materials
-const wasteData: NewWasteMaterial[] = [
-  {
-    category: 'plastics',
-    composition: { materials: ['HDPE', 'LDPE'], percentages: [60, 40] },
-    density_kg_per_m3: '920.00',
-    description: 'Plastic packaging from food supplies',
+    contamination_level: 0.15,
+    date_collected: new Date('2024-12-15T08:30:00Z'),
     id: '40000000-89ab-cdef-0123-456789abcdef',
-    name: 'Food Packaging Waste',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    processing_difficulty: 2,
-    recyclability_score: 0.85,
+    location: 'Storage Bay A-1',
+    properties: {
+      color: 'clear',
+      material_composition: ['HDPE', 'LDPE'],
+      source: 'crew_meals',
+      thickness_mm: 0.5,
+    },
+    quality_grade: 'standard',
+    quantity_kg: '45.5',
+    waste_type: 'food_packaging',
   },
   {
-    category: 'metals',
-    composition: { materials: ['Aluminum'], percentages: [100] },
-    density_kg_per_m3: '2700.00',
-    description: 'Used aluminum containers from crew meals',
+    contamination_level: 0.05,
+    date_collected: new Date('2024-12-14T14:20:00Z'),
     id: '41000000-89ab-cdef-0123-456789abcdef',
-    name: 'Aluminum Containers',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    processing_difficulty: 2,
-    recyclability_score: 0.95,
+    location: 'Storage Bay A-2',
+    properties: {
+      alloy: '6061-T6',
+      material_type: 'aluminum',
+      source: 'equipment_casings',
+      thickness_mm: 2.0,
+    },
+    quality_grade: 'pristine',
+    quantity_kg: '23.8',
+    waste_type: 'metal_components',
+  },
+  {
+    contamination_level: 0.25,
+    date_collected: new Date('2024-12-13T11:45:00Z'),
+    id: '42000000-89ab-cdef-0123-456789abcdef',
+    location: 'Storage Bay B-1',
+    properties: {
+      color: 'blue',
+      material_type: 'PET',
+      source: 'water_containers',
+      volume_liters: 2.0,
+    },
+    quality_grade: 'standard',
+    quantity_kg: '67.2',
+    waste_type: 'plastic_containers',
+  },
+  {
+    contamination_level: 0.4,
+    date_collected: new Date('2024-12-12T16:10:00Z'),
+    id: '43000000-89ab-cdef-0123-456789abcdef',
+    location: 'Storage Bay B-2',
+    properties: {
+      components: ['circuit_boards', 'wiring', 'plastics'],
+      hazardous_materials: ['lead', 'mercury'],
+      source: 'communication_equipment',
+    },
+    quality_grade: 'degraded',
+    quantity_kg: '12.3',
+    waste_type: 'electronic_waste',
+  },
+  {
+    contamination_level: 0.1,
+    date_collected: new Date('2024-12-16T09:15:00Z'),
+    expiry_date: new Date('2024-12-23T00:00:00Z'),
+    id: '44000000-89ab-cdef-0123-456789abcdef',
+    location: 'Storage Bay C-1',
+    properties: {
+      material_type: 'food_scraps',
+      moisture_content: 0.75,
+      source: 'crew_kitchen',
+    },
+    quality_grade: 'standard',
+    quantity_kg: '8.7',
+    waste_type: 'organic_waste',
+  },
+  {
+    contamination_level: 0.2,
+    date_collected: new Date('2024-12-11T13:30:00Z'),
+    id: '45000000-89ab-cdef-0123-456789abcdef',
+    location: 'Storage Bay C-2',
+    properties: {
+      density_kg_m3: 45,
+      material_type: 'polyurethane',
+      source: 'habitat_insulation',
+      thickness_mm: 50,
+    },
+    quality_grade: 'standard',
+    quantity_kg: '34.1',
+    waste_type: 'foam_insulation',
+  },
+  {
+    contamination_level: 0.05,
+    date_collected: new Date('2024-12-10T10:00:00Z'),
+    id: '46000000-89ab-cdef-0123-456789abcdef',
+    location: 'Storage Bay D-1',
+    properties: {
+      material_type: 'corrugated_cardboard',
+      source: 'packaging_materials',
+      thickness_mm: 3.0,
+    },
+    quality_grade: 'pristine',
+    quantity_kg: '15.6',
+    waste_type: 'paper_cardboard',
+  },
+  {
+    contamination_level: 0.3,
+    date_collected: new Date('2024-12-09T15:45:00Z'),
+    id: '47000000-89ab-cdef-0123-456789abcdef',
+    location: 'Storage Bay D-2',
+    properties: {
+      color: 'white',
+      condition: 'worn',
+      material_type: 'cotton_polyester_blend',
+      source: 'crew_uniforms',
+    },
+    quality_grade: 'standard',
+    quantity_kg: '28.9',
+    waste_type: 'clothing_fabric',
   },
 ]
 
-// Processing Modules
+// ========== PROCESSING MODULES ==========
 const moduleData: NewProcessingModule[] = [
   {
-    capabilities: { supported_materials: ['plastics'] },
-    description: 'Plastic waste shredder and processor',
-    efficiency_rating: 0.9,
+    capabilities: {
+      max_particle_size_mm: 5.0,
+      supported_materials: ['food_packaging', 'plastic_containers', 'paper_cardboard'],
+      temperature_range_c: [-20, 80],
+    },
+    efficiency_rating: 0.92,
     id: '50000000-89ab-cdef-0123-456789abcdef',
-    module_type: 'plastic_processor',
-    name: 'Plastic Shredder',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    power_consumption_kw: '12.30',
+    maintenance_hours_remaining: 850,
+    module_type: 'shredder',
+    name: 'Mars Shredder Alpha',
+    power_consumption_kw: '18.5',
     status: 'active',
-    throughput_kg_per_hour: '25.50',
+    throughput_kg_per_hour: '45.0',
   },
   {
-    capabilities: { supported_materials: ['metals'] },
-    description: 'Metal melting and reforming unit',
+    capabilities: {
+      max_temperature_c: 1200,
+      melting_capacity_kg: 50.0,
+      supported_materials: ['metal_components'],
+    },
     efficiency_rating: 0.88,
     id: '51000000-89ab-cdef-0123-456789abcdef',
-    module_type: 'metal_processor',
-    name: 'Metal Furnace',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    power_consumption_kw: '45.20',
+    maintenance_hours_remaining: 1200,
+    module_type: 'furnace',
+    name: 'Metal Forge Beta',
+    power_consumption_kw: '35.2',
     status: 'active',
-    throughput_kg_per_hour: '18.75',
+    throughput_kg_per_hour: '25.0',
+  },
+  {
+    capabilities: {
+      processing_time_hours: 72,
+      supported_materials: ['organic_waste'],
+      temperature_range_c: [35, 65],
+    },
+    efficiency_rating: 0.85,
+    id: '52000000-89ab-cdef-0123-456789abcdef',
+    maintenance_hours_remaining: 200,
+    module_type: 'composter',
+    name: 'Bio-Processor Gamma',
+    power_consumption_kw: '8.7',
+    status: 'maintenance',
+    throughput_kg_per_hour: '15.0',
+  },
+  {
+    capabilities: {
+      color_removal: true,
+      fiber_length_mm: 15.0,
+      supported_materials: ['clothing_fabric'],
+    },
+    efficiency_rating: 0.78,
+    id: '53000000-89ab-cdef-0123-456789abcdef',
+    maintenance_hours_remaining: 600,
+    module_type: 'textile_processor',
+    name: 'Fabric Recycler Delta',
+    power_consumption_kw: '12.3',
+    status: 'active',
+    throughput_kg_per_hour: '12.0',
+  },
+  {
+    capabilities: {
+      print_volume_cm3: 30000,
+      resolution_mm: 0.1,
+      supported_materials: ['plastic_containers', 'foam_insulation'],
+    },
+    efficiency_rating: 0.95,
+    id: '54000000-89ab-cdef-0123-456789abcdef',
+    maintenance_hours_remaining: 1500,
+    module_type: 'printer',
+    name: '3D Printer Epsilon',
+    power_consumption_kw: '15.8',
+    status: 'active',
+    throughput_kg_per_hour: '8.0',
   },
 ]
 
-// Processing Recipes
+// ========== PROCESSING RECIPES ==========
 const recipeData: NewProcessingRecipe[] = [
   {
-    crew_time_minutes: 30,
-    description: 'Convert plastic waste into storage containers',
-    energy_required_kwh: '8.250',
+    created_by: '11234567-89ab-cdef-0123-456789abcdef',
+    description: 'Convert plastic waste into storage containers for habitat organization',
+    energy_required_kwh: '12.5',
     id: '60000000-89ab-cdef-0123-456789abcdef',
-    inputs: {
-      materials: [{ material_id: '40000000-89ab-cdef-0123-456789abcdef', quantity_kg: 5.0 }],
+    input_materials: {
+      food_packaging: 8.0,
+      plastic_containers: 5.0,
     },
-    name: 'Plastic to Container Recipe',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    output_product_type: 'container',
-    outputs: {
-      primary: { mass_kg: 4.0, quantity: 2, type: 'container' },
+    is_active: true,
+    name: 'Storage Container Production',
+    output_products: {
+      storage_container: 10.0,
     },
     process_steps: [
-      { action: 'shred', duration_minutes: 20, step: 1, temperature: 25 },
-      { action: 'melt_and_form', duration_minutes: 45, step: 2, temperature: 180 },
+      { action: 'shred', duration_minutes: 30, step: 1, temperature_c: 25 },
+      { action: 'clean', duration_minutes: 15, step: 2, temperature_c: 60 },
+      { action: 'melt', duration_minutes: 45, step: 3, temperature_c: 180 },
+      { action: 'print', duration_minutes: 30, step: 4, temperature_c: 200 },
     ],
-    processing_time_minutes: 65,
-    quality_score: 0.85,
+    processing_time_minutes: 120,
+    quality_score: 0.88,
+    required_modules: ['shredder', 'printer'],
+    yield_percentage: 0.85,
+  },
+  {
+    created_by: '11234567-89ab-cdef-0123-456789abcdef',
+    description: 'Create aluminum structural beams for habitat construction',
+    energy_required_kwh: '28.0',
+    id: '61000000-89ab-cdef-0123-456789abcdef',
+    input_materials: {
+      metal_components: 15.0,
+    },
+    is_active: true,
+    name: 'Structural Beam Manufacturing',
+    output_products: {
+      structural_beam: 12.0,
+    },
+    process_steps: [
+      { action: 'clean', duration_minutes: 20, step: 1, temperature_c: 25 },
+      { action: 'melt', duration_minutes: 90, step: 2, temperature_c: 660 },
+      { action: 'cast', duration_minutes: 45, step: 3, temperature_c: 650 },
+      { action: 'cool', duration_minutes: 25, step: 4, temperature_c: 25 },
+    ],
+    processing_time_minutes: 180,
+    quality_score: 0.95,
+    required_modules: ['furnace'],
+    yield_percentage: 0.92,
+  },
+  {
+    created_by: '21234567-89ab-cdef-0123-456789abcdef',
+    description: 'Transform foam waste into new insulation panels',
+    energy_required_kwh: '8.5',
+    id: '62000000-89ab-cdef-0123-456789abcdef',
+    input_materials: {
+      foam_insulation: 12.0,
+    },
+    is_active: true,
+    name: 'Insulation Panel Creation',
+    output_products: {
+      insulation_panel: 8.0,
+    },
+    process_steps: [
+      { action: 'shred', duration_minutes: 20, step: 1, temperature_c: 25 },
+      { action: 'process', duration_minutes: 40, step: 2, temperature_c: 120 },
+      { action: 'form', duration_minutes: 30, step: 3, temperature_c: 100 },
+    ],
+    processing_time_minutes: 90,
+    quality_score: 0.82,
+    required_modules: ['shredder', 'printer'],
     yield_percentage: 0.8,
   },
   {
-    crew_time_minutes: 45,
-    description: 'Melt aluminum into construction bricks',
-    energy_required_kwh: '25.500',
-    id: '61000000-89ab-cdef-0123-456789abcdef',
-    inputs: {
-      materials: [{ material_id: '41000000-89ab-cdef-0123-456789abcdef', quantity_kg: 8.0 }],
+    created_by: '21234567-89ab-cdef-0123-456789abcdef',
+    description: 'Convert organic waste into nutrient-rich compost for hydroponics',
+    energy_required_kwh: '3.2',
+    id: '63000000-89ab-cdef-0123-456789abcdef',
+    input_materials: {
+      organic_waste: 6.0,
     },
-    name: 'Aluminum to Brick Recipe',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    output_product_type: 'brick',
-    outputs: {
-      primary: { mass_kg: 7.2, quantity: 6, type: 'brick' },
+    is_active: true,
+    name: 'Compost Production',
+    output_products: {
+      compost: 4.2,
     },
     process_steps: [
-      { action: 'melt', duration_minutes: 60, step: 1, temperature: 660 },
-      { action: 'pour_and_cool', duration_minutes: 30, step: 2, temperature: 25 },
+      { action: 'shred', duration_minutes: 30, step: 1, temperature_c: 25 },
+      { action: 'compost', duration_minutes: 4200, step: 2, temperature_c: 55 },
+      { action: 'cure', duration_minutes: 90, step: 3, temperature_c: 25 },
     ],
-    processing_time_minutes: 90,
-    quality_score: 0.92,
-    yield_percentage: 0.9,
+    processing_time_minutes: 4320, // 3 days
+    quality_score: 0.9,
+    required_modules: ['composter'],
+    yield_percentage: 0.7,
   },
 ]
 
-// Simulation Runs
-const simulationData: NewSimulationRun[] = [
+// ========== PROCESSING RUNS ==========
+const runData: NewProcessingRun[] = [
   {
-    completed_at: new Date('2025-09-18T10:00:00Z'),
-    config: {
-      energy_budget: 400,
-      waste_inputs: { metals: 15.0, plastics: 20.0 },
+    actual_outputs: {
+      storage_container: 9.5,
     },
-    created_by: '02222222-89ab-cdef-0123-456789abcdef',
-    description: 'Weekly waste processing optimization',
+    completed_at: new Date('2024-12-16T10:00:00Z'),
+    created_by: '31234567-89ab-cdef-0123-456789abcdef',
+    energy_consumed_kwh: '12.3',
+    estimated_outputs: {
+      storage_container: 10.0,
+    },
     id: '70000000-89ab-cdef-0123-456789abcdef',
-    mission_id: '10000000-89ab-cdef-0123-456789abcdef',
-    name: 'Week 20 Optimization',
-    progress_percent: 100,
-    results: {
-      products_created: 12,
-      waste_recycled_percentage: 85.5,
+    input_quantities: {
+      food_packaging: 8.0,
+      plastic_containers: 5.0,
     },
-    run_type: 'waste_optimization',
-    started_at: new Date('2025-09-18T09:00:00Z'),
+    module_id: '50000000-89ab-cdef-0123-456789abcdef',
+    name: 'Daily Container Production',
+    operator_notes: 'Production completed successfully. Quality within acceptable parameters.',
+    progress_percent: 100,
+    quality_check_passed: true,
+    recipe_id: '60000000-89ab-cdef-0123-456789abcdef',
+    started_at: new Date('2024-12-16T08:00:00Z'),
     status: 'completed',
   },
   {
-    config: {
-      required_tools: ['containers', 'bricks'],
-      time_limit_hours: 8,
+    created_by: '11234567-89ab-cdef-0123-456789abcdef',
+    energy_consumed_kwh: '18.2',
+    estimated_outputs: {
+      structural_beam: 12.0,
     },
-    created_by: '04444444-89ab-cdef-0123-456789abcdef',
-    description: 'Emergency production simulation',
     id: '71000000-89ab-cdef-0123-456789abcdef',
-    mission_id: '20000000-89ab-cdef-0123-456789abcdef',
-    name: 'Emergency Production',
+    input_quantities: {
+      metal_components: 15.0,
+    },
+    module_id: '51000000-89ab-cdef-0123-456789abcdef',
+    name: 'Structural Beam Batch #1',
+    operator_notes: 'Melting phase complete, proceeding to casting.',
     progress_percent: 65,
-    run_type: 'emergency_production',
-    started_at: new Date('2025-09-20T08:00:00Z'),
+    recipe_id: '61000000-89ab-cdef-0123-456789abcdef',
+    started_at: new Date('2024-12-16T14:00:00Z'),
+    status: 'running',
+  },
+  {
+    created_by: '21234567-89ab-cdef-0123-456789abcdef',
+    energy_consumed_kwh: '1.4',
+    estimated_outputs: {
+      compost: 4.2,
+    },
+    id: '72000000-89ab-cdef-0123-456789abcdef',
+    input_quantities: {
+      organic_waste: 6.0,
+    },
+    module_id: '52000000-89ab-cdef-0123-456789abcdef',
+    name: 'Compost Production Cycle',
+    operator_notes: 'Composting process active, temperature stable at 55°C.',
+    progress_percent: 45,
+    recipe_id: '63000000-89ab-cdef-0123-456789abcdef',
+    started_at: new Date('2024-12-14T09:00:00Z'),
     status: 'running',
   },
 ]
 
-// Products
-const productData: NewProduct[] = [
+// ========== PRODUCT INVENTORY ==========
+const productData: NewProductInventory[] = [
   {
-    creation_date: new Date('2025-09-18T12:00:00Z'),
-    description: 'Storage containers for habitat organization',
     id: '80000000-89ab-cdef-0123-456789abcdef',
-    is_in_use: true,
-    mass_kg: '8.000',
-    mission_id: '10000000-89ab-cdef-0123-456789abcdef',
-    name: 'Storage Container Set',
-    product_type: 'container',
-    quality_score: 0.85,
-    recipe_id: '60000000-89ab-cdef-0123-456789abcdef',
-    simulation_run_id: '70000000-89ab-cdef-0123-456789abcdef',
-    source_materials: { primary: { mass_kg: 10.0, material: 'plastic_waste' } },
+    is_available: true,
+    location: 'Storage Room 1A',
+    product_type: 'storage_container',
+    production_run_id: '70000000-89ab-cdef-0123-456789abcdef',
+    properties: {
+      color: 'white',
+      dimensions: { height_cm: 15, length_cm: 30, width_cm: 20 },
+      durability_rating: 'high',
+      material: 'recycled_plastic',
+    },
+    quality_score: 0.88,
+    quantity: 15,
+    reserved_quantity: 3,
+    total_mass_kg: '12.0',
+    unit_mass_kg: '0.8',
   },
   {
-    creation_date: new Date('2025-09-18T14:00:00Z'),
-    description: 'Construction bricks for habitat expansion',
     id: '81000000-89ab-cdef-0123-456789abcdef',
-    is_in_use: false,
-    mass_kg: '14.400',
-    mission_id: '10000000-89ab-cdef-0123-456789abcdef',
-    name: 'Aluminum Bricks',
-    product_type: 'brick',
-    quality_score: 0.92,
-    recipe_id: '61000000-89ab-cdef-0123-456789abcdef',
-    simulation_run_id: '70000000-89ab-cdef-0123-456789abcdef',
-    source_materials: { primary: { mass_kg: 16.0, material: 'aluminum_containers' } },
+    is_available: true,
+    location: 'Construction Yard',
+    product_type: 'structural_beam',
+    properties: {
+      height_cm: 5,
+      length_m: 2.0,
+      load_capacity_kg: 500,
+      material: 'aluminum_6061',
+      width_cm: 10,
+    },
+    quality_score: 0.95,
+    quantity: 8,
+    reserved_quantity: 0,
+    total_mass_kg: '20.0',
+    unit_mass_kg: '2.5',
+  },
+  {
+    id: '82000000-89ab-cdef-0123-456789abcdef',
+    is_available: true,
+    location: 'Insulation Storage',
+    product_type: 'insulation_panel',
+    properties: {
+      dimensions: { length_cm: 100, thickness_cm: 5, width_cm: 50 },
+      fire_rating: 'class_a',
+      material: 'recycled_foam',
+      r_value: 3.5,
+    },
+    quality_score: 0.82,
+    quantity: 12,
+    reserved_quantity: 4,
+    total_mass_kg: '14.4',
+    unit_mass_kg: '1.2',
+  },
+  {
+    id: '83000000-89ab-cdef-0123-456789abcdef',
+    is_available: true,
+    location: 'Life Support Storage',
+    product_type: 'filter_component',
+    properties: {
+      efficiency: 0.999,
+      filter_type: 'hepa',
+      lifespan_hours: 2000,
+      material: 'recycled_fabric',
+    },
+    quality_score: 0.9,
+    quantity: 6,
+    reserved_quantity: 2,
+    total_mass_kg: '1.8',
+    unit_mass_kg: '0.3',
   },
 ]
 
-// Comments
-const commentData: NewComment[] = [
+// ========== RESOURCE USAGE ==========
+const resourceData: NewResourceUsage[] = [
   {
-    author_id: '02222222-89ab-cdef-0123-456789abcdef',
-    content: 'Optimization run completed successfully. 85.5% recycling rate achieved.',
-    entity_id: '70000000-89ab-cdef-0123-456789abcdef',
-    entity_type: 'simulation_run',
+    cost_estimate: '2.46',
     id: '90000000-89ab-cdef-0123-456789abcdef',
+    module_id: '50000000-89ab-cdef-0123-456789abcdef',
+    processing_run_id: '70000000-89ab-cdef-0123-456789abcdef',
+    quantity_used: '12.3',
+    resource_type: 'power',
+    unit: 'kwh',
+    usage_date: new Date('2024-12-16T08:00:00Z'),
   },
   {
-    author_id: '01111111-89ab-cdef-0123-456789abcdef',
-    content: 'Great work on the recycling efficiency. Approve for next quarter.',
-    entity_id: '70000000-89ab-cdef-0123-456789abcdef',
-    entity_type: 'simulation_run',
+    cost_estimate: '3.64',
     id: '91000000-89ab-cdef-0123-456789abcdef',
-    parent_comment_id: '90000000-89ab-cdef-0123-456789abcdef',
+    module_id: '51000000-89ab-cdef-0123-456789abcdef',
+    processing_run_id: '71000000-89ab-cdef-0123-456789abcdef',
+    quantity_used: '18.2',
+    resource_type: 'power',
+    unit: 'kwh',
+    usage_date: new Date('2024-12-16T14:00:00Z'),
+  },
+  {
+    cost_estimate: '50.00',
+    id: '92000000-89ab-cdef-0123-456789abcdef',
+    processing_run_id: '70000000-89ab-cdef-0123-456789abcdef',
+    quantity_used: '2.0',
+    resource_type: 'crew_time',
+    unit: 'hours',
+    usage_date: new Date('2024-12-16T08:00:00Z'),
+  },
+  {
+    cost_estimate: '1.55',
+    id: '93000000-89ab-cdef-0123-456789abcdef',
+    module_id: '50000000-89ab-cdef-0123-456789abcdef',
+    processing_run_id: '70000000-89ab-cdef-0123-456789abcdef',
+    quantity_used: '15.5',
+    resource_type: 'water',
+    unit: 'liters',
+    usage_date: new Date('2024-12-16T08:00:00Z'),
   },
 ]
 
-// Attachments
-const attachmentData: NewAttachment[] = [
+// ========== SYSTEM ALERTS ==========
+const alertData: NewSystemAlert[] = [
   {
-    checksum_sha256: '4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b',
-    filename: 'waste_analysis_report.pdf',
-    id: 'a0000000-89ab-cdef-0123-456789abcdef',
-    is_public: false,
-    mime_type: 'application/pdf',
-    original_filename: 'waste_analysis_report.pdf',
-    size_bytes: 2048576,
-    storage_path: '/storage/documents/waste_analysis_report.pdf',
-    uploaded_by: '02222222-89ab-cdef-0123-456789abcdef',
-  },
-]
-
-// Audit Logs
-const auditData: NewAuditLog[] = [
-  {
-    action: 'simulation_completed',
-    changes: {
-      results: { products_created: 12 },
-      status: { from: 'running', to: 'completed' },
-    },
-    entity_id: '70000000-89ab-cdef-0123-456789abcdef',
-    entity_type: 'simulation_run',
-    id: 'b0000000-89ab-cdef-0123-456789abcdef',
-    ip_address: '192.168.1.45',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    user_id: '02222222-89ab-cdef-0123-456789abcdef',
-  },
-  {
-    action: 'product_created',
-
-    changes: {
-      mass_kg: 8.0,
-      product_type: 'container',
-    },
-    entity_id: '80000000-89ab-cdef-0123-456789abcdef',
-    entity_type: 'product',
-    id: 'b1111111-89ab-cdef-0123-456789abcdef',
-    ip_address: '192.168.1.45',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    user_id: '02222222-89ab-cdef-0123-456789abcdef',
-  },
-]
-
-// Settings
-const settingData: NewSetting[] = [
-  {
-    category: 'system',
-    description: 'Maximum concurrent simulations',
-    id: 'c0000000-89ab-cdef-0123-456789abcdef',
-    is_system: true,
-    key: 'max_concurrent_simulations',
-    value: { limit: 5 },
-  },
-  {
-    category: 'notifications',
-    description: 'Simulation completion notifications',
-    id: 'c1111111-89ab-cdef-0123-456789abcdef',
-    is_system: false,
-    key: 'simulation_notifications',
-    user_id: '02222222-89ab-cdef-0123-456789abcdef',
-    value: { on_completion: true, on_failure: true },
-  },
-]
-
-// Search Index
-const searchData: NewSearchIndex[] = [
-  {
-    content: 'First Mars research station focused on sustainable living and waste recycling.',
-    entity_id: '10000000-89ab-cdef-0123-456789abcdef',
-    entity_type: 'mission',
-    id: 'd0000000-89ab-cdef-0123-456789abcdef',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    tags: ['mars', 'research', 'waste', 'recycling'],
-    title: 'Artemis Mars Base',
-  },
-  {
-    content: 'Plastic waste shredder and processing system.',
+    alert_type: 'maintenance',
+    created_at: new Date('2024-12-16T10:30:00Z'),
     entity_id: '50000000-89ab-cdef-0123-456789abcdef',
-    entity_type: 'processing_module',
-    id: 'd1111111-89ab-cdef-0123-456789abcdef',
-    organization_id: '01234567-89ab-cdef-0123-456789abcdef',
-    tags: ['plastic', 'processing', 'equipment'],
-    title: 'Plastic Shredder',
+    entity_type: 'module',
+    id: 'a0000000-89ab-cdef-0123-456789abcdef',
+    is_resolved: false,
+    message: 'Mars Shredder Alpha requires scheduled maintenance. Efficiency has dropped to 85%.',
+    severity: 'warning',
+    title: 'Module Maintenance Required',
+  },
+  {
+    alert_type: 'inventory',
+    created_at: new Date('2024-12-16T11:15:00Z'),
+    entity_id: '40000000-89ab-cdef-0123-456789abcdef',
+    entity_type: 'waste_inventory',
+    id: 'a1000000-89ab-cdef-0123-456789abcdef',
+    is_resolved: false,
+    message: 'Food packaging waste inventory below 20kg threshold. Consider increasing collection.',
+    severity: 'info',
+    title: 'Low Waste Inventory',
+  },
+  {
+    alert_type: 'notification',
+    entity_id: '70000000-89ab-cdef-0123-456789abcdef',
+    entity_type: 'processing_run',
+    id: 'a2000000-89ab-cdef-0123-456789abcdef',
+    is_resolved: true,
+    message: 'Daily Container Production run completed successfully. 9.5 storage containers produced.',
+    resolution_notes: 'Run completed within expected parameters.',
+    resolved_at: new Date('2024-12-16T10:05:00Z'),
+    resolved_by: '31234567-89ab-cdef-0123-456789abcdef',
+    severity: 'info',
+    title: 'Processing Run Completed',
   },
 ]
 
-// Main seeding function
+// ========== MAINTENANCE RECORDS ==========
+const maintenanceData: NewMaintenanceRecord[] = [
+  {
+    cost_estimate: '150.00',
+    description: 'Routine blade sharpening and lubrication',
+    duration_hours: '4.0',
+    id: 'b0000000-89ab-cdef-0123-456789abcdef',
+    maintenance_type: 'preventive',
+    module_id: '50000000-89ab-cdef-0123-456789abcdef',
+    performed_by: '11234567-89ab-cdef-0123-456789abcdef',
+    scheduled_date: new Date('2024-12-20T08:00:00Z'),
+    status: 'scheduled',
+  },
+  {
+    cost_estimate: '300.00',
+    description: 'Replace worn heating elements and calibrate temperature sensors',
+    duration_hours: '6.0',
+    efficiency_after: 0.85,
+    efficiency_before: 0.75,
+    id: 'b1000000-89ab-cdef-0123-456789abcdef',
+    maintenance_type: 'corrective',
+    module_id: '52000000-89ab-cdef-0123-456789abcdef',
+    notes: 'Heating elements were severely corroded. Temperature calibration improved efficiency significantly.',
+    parts_replaced: ['heating_element', 'temperature_sensor'],
+    performed_by: '11234567-89ab-cdef-0123-456789abcdef',
+    scheduled_date: new Date('2024-12-17T14:00:00Z'),
+    status: 'in_progress',
+  },
+]
+
+// ========== DAILY METRICS ==========
+const metricsData: NewDailyMetric[] = [
+  {
+    energy_consumed_kwh: '30.5',
+    id: 'c0000000-89ab-cdef-0123-456789abcdef',
+    metric_date: new Date('2024-12-16T00:00:00Z'),
+    module_uptime_percent: 0.92,
+    processing_efficiency: 0.87,
+    products_by_type: {
+      storage_container: 9.5,
+      structural_beam: 8.0,
+    },
+    products_created_count: 3,
+    quality_score_average: 0.89,
+    waste_processed_kg: '45.5',
+    waste_types_processed: {
+      food_packaging: 8.0,
+      metal_components: 15.0,
+      plastic_containers: 5.0,
+    },
+  },
+  {
+    energy_consumed_kwh: '11.7',
+    id: 'c1000000-89ab-cdef-0123-456789abcdef',
+    metric_date: new Date('2024-12-15T00:00:00Z'),
+    module_uptime_percent: 0.88,
+    processing_efficiency: 0.82,
+    products_by_type: {
+      compost: 4.2,
+      insulation_panel: 8.0,
+    },
+    products_created_count: 2,
+    quality_score_average: 0.86,
+    waste_processed_kg: '38.2',
+    waste_types_processed: {
+      foam_insulation: 12.0,
+      organic_waste: 6.0,
+      paper_cardboard: 15.6,
+    },
+  },
+]
+
+// ========== MAIN SEEDING FUNCTION ==========
 export async function seed() {
   console.log('🌱 Starting Mars Waste Management System database seeding...')
 
   try {
     // Clear existing data in dependency order
     console.log('🧹 Clearing existing data...')
-    await db.delete(searchIndex)
-    await db.delete(settings)
-    await db.delete(auditLogs)
-    await db.delete(attachments)
-    await db.delete(comments)
-    await db.delete(products)
-    await db.delete(simulationRuns)
+    await db.delete(dailyMetrics)
+    await db.delete(maintenanceRecords)
+    await db.delete(resourceUsage)
+    await db.delete(systemAlerts)
+    await db.delete(productInventory)
+    await db.delete(processingRuns)
     await db.delete(processingRecipes)
     await db.delete(processingModules)
-    await db.delete(wasteMaterials)
-    await db.delete(missionCrew)
-    await db.delete(missions)
-    await db.delete(apiKeys)
-    await db.delete(userRoles)
+    await db.delete(wasteInventory)
     await db.delete(users)
-    await db.delete(organizations)
 
     // Insert data in dependency order
-    console.log('📊 Inserting organizations...')
-    await db.insert(organizations).values(orgData)
-    console.log(`✅ Inserted ${orgData.length} organizations`)
-
     console.log('👥 Inserting users...')
     await db.insert(users).values(userData)
     console.log(`✅ Inserted ${userData.length} users`)
 
-    console.log('🔐 Inserting user roles...')
-    await db.insert(userRoles).values(roleData)
-    console.log(`✅ Inserted ${roleData.length} user roles`)
-
-    console.log('🔑 Inserting API keys...')
-    await db.insert(apiKeys).values(apiKeyData)
-    console.log(`✅ Inserted ${apiKeyData.length} API keys`)
-
-    console.log('🚀 Inserting missions...')
-    await db.insert(missions).values(missionData)
-    console.log(`✅ Inserted ${missionData.length} missions`)
-
-    console.log('👨 Inserting mission crew assignments...')
-    await db.insert(missionCrew).values(crewData)
-    console.log(`✅ Inserted ${crewData.length} crew assignments`)
-
-    console.log('♻ Inserting waste materials...')
-    await db.insert(wasteMaterials).values(wasteData)
-    console.log(`✅ Inserted ${wasteData.length} waste materials`)
+    console.log('♻️ Inserting waste inventory...')
+    await db.insert(wasteInventory).values(wasteData)
+    console.log(`✅ Inserted ${wasteData.length} waste items`)
 
     console.log('🏭 Inserting processing modules...')
     await db.insert(processingModules).values(moduleData)
@@ -504,45 +711,42 @@ export async function seed() {
     await db.insert(processingRecipes).values(recipeData)
     console.log(`✅ Inserted ${recipeData.length} processing recipes`)
 
-    console.log('🧮 Inserting simulation runs...')
-    await db.insert(simulationRuns).values(simulationData)
-    console.log(`✅ Inserted ${simulationData.length} simulation runs`)
+    console.log('⚙️ Inserting processing runs...')
+    await db.insert(processingRuns).values(runData)
+    console.log(`✅ Inserted ${runData.length} processing runs`)
 
-    console.log('📦 Inserting products...')
-    await db.insert(products).values(productData)
-    console.log(`✅ Inserted ${productData.length} products`)
+    console.log('📦 Inserting product inventory...')
+    await db.insert(productInventory).values(productData)
+    console.log(`✅ Inserted ${productData.length} product items`)
 
-    console.log('💬 Inserting comments...')
-    await db.insert(comments).values(commentData)
-    console.log(`✅ Inserted ${commentData.length} comments`)
+    console.log('📊 Inserting resource usage...')
+    await db.insert(resourceUsage).values(resourceData)
+    console.log(`✅ Inserted ${resourceData.length} resource usage records`)
 
-    console.log('📎 Inserting attachments...')
-    await db.insert(attachments).values(attachmentData)
-    console.log(`✅ Inserted ${attachmentData.length} attachments`)
+    console.log('🚨 Inserting system alerts...')
+    await db.insert(systemAlerts).values(alertData)
+    console.log(`✅ Inserted ${alertData.length} system alerts`)
 
-    console.log('📝 Inserting audit logs...')
-    await db.insert(auditLogs).values(auditData)
-    console.log(`✅ Inserted ${auditData.length} audit logs`)
+    console.log('🔧 Inserting maintenance records...')
+    await db.insert(maintenanceRecords).values(maintenanceData)
+    console.log(`✅ Inserted ${maintenanceData.length} maintenance records`)
 
-    console.log('⚙ Inserting settings...')
-    await db.insert(settings).values(settingData)
-    console.log(`✅ Inserted ${settingData.length} settings`)
-
-    console.log('🔍 Inserting search index entries...')
-    await db.insert(searchIndex).values(searchData)
-    console.log(`✅ Inserted ${searchData.length} search index entries`)
+    console.log('📈 Inserting daily metrics...')
+    await db.insert(dailyMetrics).values(metricsData)
+    console.log(`✅ Inserted ${metricsData.length} daily metrics`)
 
     console.log('🎉 Database seeding completed successfully!')
     console.log('\n📊 Summary:')
-    console.log(`  • ${orgData.length} organizations`)
     console.log(`  • ${userData.length} users`)
-    console.log(`  • ${missionData.length} missions`)
-    console.log(`  • ${wasteData.length} waste material types`)
+    console.log(`  • ${wasteData.length} waste inventory items`)
     console.log(`  • ${moduleData.length} processing modules`)
     console.log(`  • ${recipeData.length} processing recipes`)
-    console.log(`  • ${simulationData.length} simulation runs`)
-    console.log(`  • ${productData.length} products`)
-    console.log(`  • ${commentData.length} comments`)
+    console.log(`  • ${runData.length} processing runs`)
+    console.log(`  • ${productData.length} product inventory items`)
+    console.log(`  • ${resourceData.length} resource usage records`)
+    console.log(`  • ${alertData.length} system alerts`)
+    console.log(`  • ${maintenanceData.length} maintenance records`)
+    console.log(`  • ${metricsData.length} daily metrics`)
   } catch (error) {
     console.error('❌ Database seeding failed:', error)
     throw error
@@ -551,21 +755,19 @@ export async function seed() {
 
 // Export data arrays for testing
 export {
-  orgData,
   userData,
-  roleData,
-  apiKeyData,
-  missionData,
-  crewData,
   wasteData,
   moduleData,
   recipeData,
-  simulationData,
+  runData,
   productData,
-  commentData,
-  attachmentData,
-  auditData,
-  settingData,
-  searchData,
+  resourceData,
+  alertData,
+  maintenanceData,
+  metricsData,
 }
-seed()
+
+// Run seeding if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seed()
+}

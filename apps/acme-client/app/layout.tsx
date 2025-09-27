@@ -34,7 +34,7 @@ export default async function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Fustat:wght@200..800&display=swap" rel="stylesheet" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-svh bg-slate-50 antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange enableColorScheme enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange enableColorScheme enableSystem>
           <ReactQueryProvider>
             <div vaul-drawer-wrapper="">
               <div className="relative flex min-h-svh flex-col bg-background">{children}</div>

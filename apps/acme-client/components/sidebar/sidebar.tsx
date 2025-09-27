@@ -1,7 +1,7 @@
 'use client'
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem } from '@acme/ui/sidebar'
-import { Asterisk } from 'lucide-react'
+import { Asterisk, CookingPot, FileTerminal } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type * as React from 'react'
@@ -14,6 +14,16 @@ const data = {
       icon: Asterisk,
       title: 'Waste Materials',
       url: '/waste-materials',
+    },
+    {
+      icon: FileTerminal,
+      title: 'Running Processes',
+      url: '/running-processes',
+    },
+    {
+      icon: CookingPot,
+      title: 'Recipes',
+      url: '/recipes',
     },
   ],
 }

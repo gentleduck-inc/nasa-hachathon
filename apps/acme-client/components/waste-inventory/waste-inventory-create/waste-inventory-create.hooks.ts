@@ -13,12 +13,12 @@ export function useWasteInventoryMutations() {
   const createMutation = useMutation({
     mutationFn: (payload: WasteMaterialForm) => createWasteInventory(payload),
     onError: () => {
-      toast.error('Error creating waste Inventory', { id: 'createWasteInventory' })
+      toast.error('Error creating waste inventory', { id: 'createWasteInventory' })
     },
     onSuccess: (newItem) => {
       console.log(newItem)
-      toast.success('Waste Inventory created successfully', { id: 'createWasteInventory' })
-      queryClient.setQueryData<WasteMaterialForm[]>(['waste-Inventory'], (old) =>
+      toast.success('Waste inventory created successfully', { id: 'createWasteInventory' })
+      queryClient.setQueryData<WasteMaterialForm[]>(['waste-inventory'], (old) =>
         old ? [...old, newItem.data] : [newItem.data],
       )
     },
@@ -27,11 +27,11 @@ export function useWasteInventoryMutations() {
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: WasteMaterialForm }) => updateWasteInventory(id, payload),
     onError: () => {
-      toast.error('Error updating waste Inventory', { id: 'updateWasteInventory' })
+      toast.error('Error updating waste inventory', { id: 'updateWasteInventory' })
     },
     onSuccess: (updatedItem) => {
-      toast.success('Waste Inventory updated successfully', { id: 'updateWasteInventory' })
-      queryClient.setQueryData<WasteMaterialForm[]>(['waste-Inventory'], (old) =>
+      toast.success('Waste inventory updated successfully', { id: 'updateWasteInventory' })
+      queryClient.setQueryData<WasteMaterialForm[]>(['waste-inventory'], (old) =>
         // @ts-ignore Because we know the id will exist
         old ? old.map((item) => (item.id === updatedItem.data.id ? updatedItem.data : item)) : [updatedItem.data],
       )
@@ -41,11 +41,11 @@ export function useWasteInventoryMutations() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteWasteInventory(id),
     onError: () => {
-      toast.error('Error deleting waste Inventory', { id: 'deleteWasteInventory' })
+      toast.error('Error deleting waste inventory', { id: 'deleteWasteInventory' })
     },
     onSuccess: (deletedItem) => {
-      toast.success('Waste Inventory deleted successfully', { id: 'deleteWasteInventory' })
-      queryClient.setQueryData<WasteMaterialForm[]>(['waste-Inventory'], (old) =>
+      toast.success('Waste inventory deleted successfully', { id: 'deleteWasteInventory' })
+      queryClient.setQueryData<WasteMaterialForm[]>(['waste-inventory'], (old) =>
         // @ts-ignore Because we know the id will exist
         old ? old.filter((item) => item.id !== deletedItem.data.id) : [],
       )

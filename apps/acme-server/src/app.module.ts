@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { AuthModule } from './auth'
+import { HealthModule } from './common/health'
 import { DrizzleModule } from './drizzle'
 import { EmailModule } from './email'
 import { LoggerModule } from './logger'
@@ -28,6 +29,7 @@ import { WasteInventorysModule } from './waste_inventory'
     SocketModule,
     EmailModule,
     AuthModule,
+    // HealthModule,
     WasteInventorysModule,
     ProcessingModulesModule,
     ProductInventoryModule,

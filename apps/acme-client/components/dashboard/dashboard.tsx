@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { server_api } from '~/libs/axios'
 import {
@@ -22,7 +22,7 @@ export function Dashboard() {
   // Queries
   const runsQuery = useQuery({
     queryFn: async () => {
-      const { data } = await server_api.get('/api/runs', { params: { status: 'running' } })
+      const { data } = await server_api.get('/runs', { params: { status: 'running' } })
       return data?.data ?? []
     },
     queryKey: ['runs', { status: 'running' }],
@@ -31,7 +31,7 @@ export function Dashboard() {
 
   const modulesQuery = useQuery({
     queryFn: async () => {
-      const { data } = await server_api.get('/api/modules')
+      const { data } = await server_api.get('/modules')
       return data?.data ?? []
     },
     queryKey: ['modules'],
@@ -50,38 +50,54 @@ export function Dashboard() {
     retry: 0,
   })
 
-  // Socket (optional) — dynamically import socket.io-client if available
+  // Socket connection state
   const [socketStatus, setSocketStatus] = useState<'disconnected' | 'connected' | 'error'>('disconnected')
+  const queryClient = useQueryClient()
+
+  // Use our socket client with proper cleanup
   useEffect(() => {
-    let cleanup: (() => void) | undefined
-    ;(async () => {
+    const initializeSocket = async () => {
       try {
-        const { getSocket } = await import('~/libs/socket').catch(() => ({ getSocket: undefined as any }))
-        if (!getSocket) return
+        const { getSocket } = await import('~/libs/socket')
         const socket = getSocket()
         if (!socket) return
+
         const onConnect = () => setSocketStatus('connected')
         const onDisconnect = () => setSocketStatus('disconnected')
-        const onAnyEvent = () => {
-          // lightweight refetch triggers
-          runsQuery.refetch()
-          modulesQuery.refetch()
-        }
+        const onError = () => setSocketStatus('error')
+
+        // Listen for connection events
         socket.on('connect', onConnect)
         socket.on('disconnect', onDisconnect)
-        socket.onAny(onAnyEvent)
-        cleanup = () => {
+        socket.on('connect_error', onError)
+
+        // Listen for run updates
+        const onRunProgress = (data: any) => {
+          queryClient.setQueryData(['runs', { status: 'running' }], (old: any) =>
+            Array.isArray(old) ? old.map((run) => (run.id === data.id ? { ...run, ...data } : run)) : old,
+          )
+        }
+
+        socket.on('run_progress', onRunProgress)
+
+        // Set initial status
+        setSocketStatus(socket.connected ? 'connected' : 'disconnected')
+
+        // Cleanup
+        return () => {
           socket.off('connect', onConnect)
           socket.off('disconnect', onDisconnect)
-          socket.offAny(onAnyEvent)
+          socket.off('connect_error', onError)
+          socket.off('run_progress', onRunProgress)
         }
-      } catch (e) {
+      } catch (error) {
+        console.error('Failed to initialize socket:', error)
         setSocketStatus('error')
       }
-    })()
-    return () => cleanup?.()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    }
+
+    initializeSocket()
+  }, [queryClient])
 
   const activeRuns = runsQuery.data ?? []
   const modules = modulesQuery.data ?? []

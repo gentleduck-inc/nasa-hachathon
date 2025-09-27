@@ -6,7 +6,7 @@ import { createWasteInventorySchema, updateWasteInventorySchema } from './waste_
 import { WasteInventorysService } from './waste_inventory.service'
 import { CreateWasteInventoryDto, UpdateWasteInventoryDto } from './waste_inventory.types'
 
-@Controller('waste_inventory')
+@Controller('waste-inventory')
 @UseFilters(ErrorExceptionFilter)
 export class WasteInventorysController {
   constructor(private readonly wasteInventorysService: WasteInventorysService) {}

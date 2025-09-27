@@ -15,19 +15,11 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
+import { WASTE_ENUM } from './constants'
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['admin', 'operator', 'engineer', 'scientist'])
-export const wasteTypeEnum = pgEnum('waste_type', [
-  'food_packaging',
-  'clothing_fabric',
-  'metal_components',
-  'foam_insulation',
-  'plastic_containers',
-  'electronic_waste',
-  'organic_waste',
-  'paper_cardboard',
-])
+export const wasteTypeEnum = pgEnum('waste_type', WASTE_ENUM)
 export const moduleStatusEnum = pgEnum('module_status', ['active', 'maintenance', 'broken', 'offline'])
 export const runStatusEnum = pgEnum('run_status', ['queued', 'running', 'paused', 'completed', 'failed'])
 export const productTypeEnum = pgEnum('product_type', [

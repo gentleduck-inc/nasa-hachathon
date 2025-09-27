@@ -17,8 +17,8 @@ import { IconCreditCard, IconDotsVertical, IconNotification, IconUserCircle } fr
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
-import { Signout } from '../auth/signout'
 import { server_api } from '~/libs/axios'
+import { Signout } from '../auth/signout'
 
 export function NavUser() {
   const { isMobile } = useSidebar()

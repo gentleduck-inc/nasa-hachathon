@@ -4,7 +4,7 @@ import { ProcessingRunsService } from './processing_runs.service'
 import { CreateRunDto, RunFiltersDto } from './processing_runs.types'
 
 @UseGuards(AuthGuard)
-@Controller('api/runs')
+@Controller('/api/runs')
 export class ProcessingRunsController {
   constructor(private readonly service: ProcessingRunsService) {}
 

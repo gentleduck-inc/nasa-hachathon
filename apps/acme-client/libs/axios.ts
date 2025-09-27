@@ -1,5 +1,4 @@
 import axios from 'axios'
-import router from 'next/router'
 import { toast } from 'sonner'
 
 const server_api = axios.create({

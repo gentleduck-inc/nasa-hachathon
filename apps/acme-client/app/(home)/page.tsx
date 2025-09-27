@@ -1,20 +1,7 @@
 'use client'
 
-export default function Page() {
-  // const [myCookie, setMyCookie] = React.useState<string>('')
-  //
-  // const router = useRouter()
-  // const {} = useAuth()
-  // React.useEffect(() => {
-  //   const cookies = document.cookie
-  //     .split('; ')
-  //     .find((row) => row.startsWith('myCookieName='))
-  //     ?.split('=')[1]
-  //
-  //   setMyCookie(cookies ?? '')
-  // }, [])
+import { Dashboard } from '~/components/dashboard/dashboard'
 
-  // console.log(myCookie)
-
-  return ''
+export default function DashboardPage() {
+  return <Dashboard />
 }

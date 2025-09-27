@@ -38,6 +38,7 @@ export class AuthService {
 
       const passwordMatch = await PasswordHasher.comparePassword(data.password, _user.password_hash)
       if (!passwordMatch) {
+        console.log(passwordMatch)
         throwError<AuthMessageType>('AUTH_PASSWORD_INVALID', 401)
         return
       }
